@@ -150,13 +150,14 @@ app.get('/', async (req, res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Rehacentrum API Dashboard</title>
         <style>
-            body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-            .container { max-width: 1200px; margin: 0 auto; }
-            .header { background: #2c3e50; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-            .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px; }
-            .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-            .log-containers { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 15px; margin-bottom: 20px; }
-            .log-container { background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-height: 400px; overflow-y: auto; }
+            body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+            .container { max-width: 100%; margin: 0; padding: 20px; }
+            .header { background: #2c3e50; color: white; padding: 20px; margin-bottom: 20px; }
+            .basic-info { display: flex; gap: 20px; margin-bottom: 20px; align-items: center; }
+            .basic-info-item { background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            .basic-info-item strong { display: block; margin-bottom: 5px; }
+            .log-containers { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: calc(100vh - 200px); }
+            .log-container { background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 100%; overflow-y: auto; }
             .log-container h4 { margin: 0 0 10px 0; color: #333; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
             .log-entry { padding: 8px 10px; margin-bottom: 5px; border-radius: 4px; font-family: monospace; font-size: 11px; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
             .log-entry:hover { border-color: #007bff; transform: translateY(-1px); }
@@ -190,29 +191,20 @@ app.get('/', async (req, res) => {
                 <p>Real-time monitoring | Last updated: <span id="lastUpdate">${dayjs().tz(config.calendar.timeZone).format('YYYY-MM-DD HH:mm:ss')}</span></p>
             </div>
 
-            <div class="stats">
-                <div class="stat-card">
-                    <h3>📊 System Status</h3>
-                    <p>Calendar: <span style="color: ${googleCalendar.initialized ? 'green' : 'red'}">${googleCalendar.initialized ? '✓ Connected' : '✗ Disconnected'}</span></p>
-                    <p>SMS: <span style="color: ${smsService.getStatus().enabled ? 'green' : 'orange'}">${smsService.getStatus().enabled ? '✓ Enabled' : '⚠ Disabled'}</span></p>
+            <div class="basic-info">
+                <div class="basic-info-item">
+                    <strong>Calendar</strong>
+                    <span style="color: ${googleCalendar.initialized ? 'green' : 'red'}">${googleCalendar.initialized ? '✓ Connected' : '✗ Disconnected'}</span>
                 </div>
                 
-                <div class="stat-card">
-                    <h3>📱 SMS Service</h3>
-                    <p>Status: ${smsService.getStatus().enabled ? 'Active' : 'Disabled'}</p>
-                    <p>Phone: ${smsService.getStatus().phoneNumber || 'N/A'}</p>
+                <div class="basic-info-item">
+                    <strong>SMS Service</strong>
+                    <span style="color: ${smsService.getStatus().enabled ? 'green' : 'orange'}">${smsService.getStatus().enabled ? '✓ Enabled' : '⚠ Disabled'}</span>
                 </div>
                 
-                <div class="stat-card">
-                    <h3>📅 Appointment Types</h3>
-                    <p>Total: ${Object.keys(config.appointmentTypes).length}</p>
-                    <p>Active: ${Object.keys(config.appointmentTypes).length}</p>
-                </div>
-                
-                <div class="stat-card">
-                    <h3>📝 Activity Logs</h3>
-                    <p>Total entries: ${logs.length}</p>
-                    <p>Max capacity: ${MAX_LOGS}</p>
+                <div class="basic-info-item">
+                    <strong>Activity Logs</strong>
+                    <span>${logs.length} entries</span>
                 </div>
             </div>
 
@@ -222,22 +214,22 @@ app.get('/', async (req, res) => {
             </div>
 
             <div class="log-containers">
-                <!-- Webhook Container -->
+                <!-- API & Webhook Container -->
                 <div class="log-container">
-                    <h4>🤖 ElevenLabs Webhooks</h4>
-                    ${logs.filter(log => log.type === 'webhook').slice(0, 10).map(log => `
-                        <div class="log-entry log-${log.type}" onclick="toggleLogDetails('${log.id}')">
+                    <h4>🔌 API Endpoints & Webhooks</h4>
+                    ${logs.filter(log => log.type === 'api' || log.type === 'webhook').slice(0, 20).map(log => `
+                        <div class="log-entry log-${log.type}" onclick="toggleLogDetails('${log.id}', event)">
                             <div class="log-header">
                                 <div>
                                     <div class="log-time">${log.timestamp.split(' ')[1]}</div>
-                                    <div class="log-path">${log.requestData?.body?.action || 'webhook'}</div>
+                                    <div class="log-path">${log.type === 'webhook' ? '🤖 ' + (log.requestData?.body?.action || 'webhook') : log.requestData?.method + ' ' + log.requestData?.path}</div>
                                 </div>
                                 <span class="log-expand">+</span>
                             </div>
                             <div id="details-${log.id}" class="log-details">
                                 <div class="log-tabs">
-                                    <div class="log-tab active" onclick="showTab('${log.id}', 'request')">Request</div>
-                                    <div class="log-tab" onclick="showTab('${log.id}', 'response')">Response</div>
+                                    <div class="log-tab active" onclick="showTab('${log.id}', 'request', event)">Request</div>
+                                    <div class="log-tab" onclick="showTab('${log.id}', 'response', event)">Response</div>
                                 </div>
                                 <div id="tab-${log.id}-request" class="tab-content">
                                     <pre>${JSON.stringify(log.requestData, null, 2)}</pre>
@@ -248,62 +240,20 @@ app.get('/', async (req, res) => {
                             </div>
                         </div>
                     `).join('')}
-                    ${logs.filter(log => log.type === 'webhook').length === 0 ? '<div style="color: #6c757d; font-style: italic; font-size: 12px;">No webhook calls yet</div>' : ''}
+                    ${logs.filter(log => log.type === 'api' || log.type === 'webhook').length === 0 ? '<div style="color: #6c757d; font-style: italic; font-size: 12px;">No API calls or webhooks yet</div>' : ''}
                 </div>
 
-                <!-- API Container -->
+                <!-- System & Bookings Container -->
                 <div class="log-container">
-                    <h4>🔌 API Endpoints</h4>
-                    ${logs.filter(log => log.type === 'api').slice(0, 10).map(log => `
-                        <div class="log-entry log-${log.type}" onclick="toggleLogDetails('${log.id}')">
-                            <div class="log-header">
-                                <div>
-                                    <div class="log-time">${log.timestamp.split(' ')[1]}</div>
-                                    <div class="log-path">${log.requestData?.method} ${log.requestData?.path}</div>
-                                </div>
-                                <span class="log-expand">+</span>
-                            </div>
-                            <div id="details-${log.id}" class="log-details">
-                                <div class="log-tabs">
-                                    <div class="log-tab active" onclick="showTab('${log.id}', 'request')">Request</div>
-                                    <div class="log-tab" onclick="showTab('${log.id}', 'response')">Response</div>
-                                </div>
-                                <div id="tab-${log.id}-request" class="tab-content">
-                                    <pre>${JSON.stringify(log.requestData, null, 2)}</pre>
-                                </div>
-                                <div id="tab-${log.id}-response" class="tab-content" style="display: none;">
-                                    <pre>${JSON.stringify(log.responseData, null, 2)}</pre>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('')}
-                    ${logs.filter(log => log.type === 'api').length === 0 ? '<div style="color: #6c757d; font-style: italic; font-size: 12px;">No API calls yet</div>' : ''}
-                </div>
-
-                <!-- Bookings Container -->
-                <div class="log-container">
-                    <h4>📅 Bookings</h4>
-                    ${logs.filter(log => log.type === 'booking').slice(0, 10).map(log => `
+                    <h4>📅 Bookings & System Events</h4>
+                    ${logs.filter(log => log.type === 'booking' || ['success', 'warning', 'error'].includes(log.type)).slice(0, 20).map(log => `
                         <div class="log-entry log-${log.type}">
                             <div class="log-time">${log.timestamp.split(' ')[1]}</div>
-                            <div class="log-path">${log.message}</div>
+                            <div class="log-path">${log.type === 'booking' ? '📅 ' + log.message : log.type.toUpperCase() + ': ' + log.message}</div>
                             ${log.data ? `<div style="font-size: 10px; color: #6c757d; margin-top: 3px;">${JSON.stringify(log.data)}</div>` : ''}
                         </div>
                     `).join('')}
-                    ${logs.filter(log => log.type === 'booking').length === 0 ? '<div style="color: #6c757d; font-style: italic; font-size: 12px;">No bookings yet</div>' : ''}
-                </div>
-
-                <!-- System Container -->
-                <div class="log-container">
-                    <h4>⚙️ System</h4>
-                    ${logs.filter(log => ['success', 'warning', 'error'].includes(log.type)).slice(0, 10).map(log => `
-                        <div class="log-entry log-${log.type}">
-                            <div class="log-time">${log.timestamp.split(' ')[1]}</div>
-                            <div class="log-path">${log.type.toUpperCase()}: ${log.message}</div>
-                            ${log.data ? `<div style="font-size: 10px; color: #6c757d; margin-top: 3px;">${JSON.stringify(log.data)}</div>` : ''}
-                        </div>
-                    `).join('')}
-                    ${logs.filter(log => ['success', 'warning', 'error'].includes(log.type)).length === 0 ? '<div style="color: #6c757d; font-style: italic; font-size: 12px;">No system events yet</div>' : ''}
+                    ${logs.filter(log => log.type === 'booking' || ['success', 'warning', 'error'].includes(log.type)).length === 0 ? '<div style="color: #6c757d; font-style: italic; font-size: 12px;">No bookings or system events yet</div>' : ''}
                 </div>
             </div>
         </div>
@@ -320,7 +270,8 @@ app.get('/', async (req, res) => {
                 }
             }
             
-            function toggleLogDetails(logId) {
+            function toggleLogDetails(logId, event) {
+                event.stopPropagation();
                 const details = document.getElementById('details-' + logId);
                 const expand = details.previousElementSibling.querySelector('.log-expand');
                 
@@ -333,7 +284,8 @@ app.get('/', async (req, res) => {
                 }
             }
             
-            function showTab(logId, tabName) {
+            function showTab(logId, tabName, event) {
+                event.stopPropagation();
                 // Hide all tabs for this log
                 const tabs = document.querySelectorAll('#details-' + logId + ' .tab-content');
                 tabs.forEach(tab => tab.style.display = 'none');
