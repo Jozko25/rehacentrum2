@@ -333,6 +333,33 @@ app.delete('/api/logs', (req, res) => {
   res.json({ message: 'Logs cleared successfully' });
 });
 
+// Delete all events for a specific date
+app.delete('/api/events/:date', async (req, res) => {
+  try {
+    const { date } = req.params;
+    
+    // Validate date format
+    if (!dayjs(date, 'YYYY-MM-DD', true).isValid()) {
+      return res.status(400).json({
+        error: 'Invalid date format. Use YYYY-MM-DD format.'
+      });
+    }
+
+    addLog('api', `Deleting all events for date: ${date}`);
+    
+    const result = await googleCalendar.deleteAllEventsForDate(date);
+    
+    addLog('success', `Deleted ${result.deleted} events from ${date}`);
+    res.json(result);
+  } catch (error) {
+    addLog('error', `Failed to delete events for date: ${error.message}`);
+    res.status(500).json({
+      error: 'Failed to delete events',
+      message: error.message
+    });
+  }
+});
+
 // Appointment Types endpoint
 app.get('/api/appointment-types', (req, res) => {
   const types = Object.entries(config.appointmentTypes).map(([key, type]) => ({

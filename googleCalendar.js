@@ -172,6 +172,52 @@ class GoogleCalendarService {
     }
   }
 
+  async deleteAllEventsForDate(date) {
+    await this.ensureInitialized();
+    
+    try {
+      console.log(`🗑️ Getting all events for ${date} to delete...`);
+      const events = await this.getEventsForDay(date);
+      
+      if (events.length === 0) {
+        console.log(`✅ No events found on ${date} to delete`);
+        return { deleted: 0, message: `No events found on ${date}` };
+      }
+
+      console.log(`🗑️ Found ${events.length} events to delete on ${date}`);
+      let deletedCount = 0;
+      const deletedEvents = [];
+
+      for (const event of events) {
+        try {
+          await this.deleteEvent(event.id);
+          deletedCount++;
+          deletedEvents.push({
+            id: event.id,
+            summary: event.summary,
+            start: event.start?.dateTime || event.start?.date,
+            end: event.end?.dateTime || event.end?.date
+          });
+          console.log(`✅ Deleted event: ${event.summary} (${event.id})`);
+        } catch (error) {
+          console.error(`❌ Failed to delete event ${event.id}:`, error.message);
+        }
+      }
+
+      console.log(`🎉 Successfully deleted ${deletedCount}/${events.length} events from ${date}`);
+      return {
+        deleted: deletedCount,
+        total: events.length,
+        date: date,
+        deletedEvents: deletedEvents,
+        message: `Successfully deleted ${deletedCount} events from ${date}`
+      };
+    } catch (error) {
+      console.error('Failed to delete events for date:', error);
+      throw error;
+    }
+  }
+
   async updateEvent(eventId, updateData) {
     await this.ensureInitialized();
     
