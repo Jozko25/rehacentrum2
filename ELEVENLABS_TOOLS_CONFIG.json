@@ -1,0 +1,159 @@
+{
+  "tools": [
+    {
+      "name": "get_available_slots",
+      "description": "Vyhľadá všetky voľné termíny pre konkrétny dátum a typ vyšetrenia",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Dátum v formáte YYYY-MM-DD"
+          },
+          "appointment_type": {
+            "type": "string",
+            "enum": ["sportova_prehliadka", "vstupne_vysetrenie", "kontrolne_vysetrenie", "zdravotnicke_pomocky", "konzultacia"],
+            "description": "Typ vyšetrenia"
+          }
+        },
+        "required": ["date", "appointment_type"]
+      }
+    },
+    {
+      "name": "find_closest_slot",
+      "description": "Nájde najbližší voľný termín pre daný typ vyšetrenia",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "appointment_type": {
+            "type": "string",
+            "enum": ["sportova_prehliadka", "vstupne_vysetrenie", "kontrolne_vysetrenie", "zdravotnicke_pomocky", "konzultacia"],
+            "description": "Typ vyšetrenia"
+          },
+          "preferred_date": {
+            "type": "string",
+            "description": "Preferovaný dátum v formáte YYYY-MM-DD (nepovinné)"
+          },
+          "days_to_search": {
+            "type": "integer",
+            "description": "Počet dní na vyhľadávanie (predvolené: 7)",
+            "default": 7
+          }
+        },
+        "required": ["appointment_type"]
+      }
+    },
+    {
+      "name": "book_appointment",
+      "description": "Vytvorí novú rezerváciu termínu",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "appointment_type": {
+            "type": "string",
+            "enum": ["sportova_prehliadka", "vstupne_vysetrenie", "kontrolne_vysetrenie", "zdravotnicke_pomocky", "konzultacia"],
+            "description": "Typ vyšetrenia"
+          },
+          "date_time": {
+            "type": "string",
+            "description": "Dátum a čas termínu v ISO formáte (YYYY-MM-DDTHH:mm:ss)"
+          },
+          "patient_name": {
+            "type": "string",
+            "description": "Meno pacienta"
+          },
+          "patient_surname": {
+            "type": "string",
+            "description": "Priezvisko pacienta"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Telefónne číslo v formáte +421XXXXXXXXX"
+          },
+          "insurance": {
+            "type": "string",
+            "description": "Názov poisťovne"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email adresa (nepovinné)"
+          },
+          "birth_id": {
+            "type": "string",
+            "description": "Rodné číslo (nepovinné)"
+          }
+        },
+        "required": ["appointment_type", "date_time", "patient_name", "patient_surname", "phone", "insurance"]
+      }
+    },
+    {
+      "name": "cancel_appointment",
+      "description": "Zruší existujúci termín - vyžaduje overenie totožnosti pacienta",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "patient_name": {
+            "type": "string",
+            "description": "Meno a priezvisko pacienta"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Telefónne číslo pacienta"
+          },
+          "appointment_date": {
+            "type": "string",
+            "description": "Dátum termínu v formáte YYYY-MM-DD"
+          }
+        },
+        "required": ["patient_name", "phone", "appointment_date"]
+      }
+    },
+    {
+      "name": "reschedule_appointment",
+      "description": "Presunie existujúci termín na nový dátum a čas",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "patient_name": {
+            "type": "string",
+            "description": "Meno a priezvisko pacienta"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Telefónne číslo pacienta"
+          },
+          "old_date": {
+            "type": "string",
+            "description": "Pôvodný dátum termínu v formáte YYYY-MM-DD"
+          },
+          "new_date_time": {
+            "type": "string",
+            "description": "Nový dátum a čas v ISO formáte (YYYY-MM-DDTHH:mm:ss)"
+          }
+        },
+        "required": ["patient_name", "phone", "old_date", "new_date_time"]
+      }
+    },
+    {
+      "name": "send_fallback_sms",
+      "description": "Pošle SMS správu keď AI asistent nedokáže dokončiť rezerváciu",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "description": "Telefónne číslo pacienta"
+          },
+          "message": {
+            "type": "string",
+            "description": "Obsah SMS správy"
+          }
+        },
+        "required": ["phone", "message"]
+      }
+    }
+  ],
+  "webhook_url": "https://your-vercel-app.vercel.app/api/booking/webhook",
+  "webhook_method": "POST",
+  "webhook_timeout": 30000
+}

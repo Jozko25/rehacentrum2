@@ -1,0 +1,21 @@
+# Rehacentrum Healthcare API - Environment Variables
+
+# === REQUIRED VARIABLES ===
+
+# Google Calendar Service Account (JSON format)
+# Get this from Google Cloud Console -> Service Accounts
+GOOGLE_CREDENTIALS={"type":"service_account","project_id":"rehacentrum-468520","private_key_id":"...","private_key":"-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n","client_email":"...","client_id":"...","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url":"..."}
+
+# Environment
+NODE_ENV=production
+
+# === OPTIONAL VARIABLES ===
+
+# SMS Service (Twilio) - Set TWILIO_ENABLED=true to enable
+TWILIO_ENABLED=false
+TWILIO_ACCOUNT_SID=your_twilio_account_sid_here
+TWILIO_AUTH_TOKEN=your_twilio_auth_token_here
+TWILIO_PHONE_NUMBER=+12678638448
+
+# Server Port (automatically set by Railway/Vercel)
+PORT=3000

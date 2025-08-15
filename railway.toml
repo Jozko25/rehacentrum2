@@ -1,0 +1,14 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+
+[environments.production.variables]
+NODE_ENV = "production"
+PORT = "$PORT"
+
+[environments.production.services.web]
+healthcheckPath = "/health"
