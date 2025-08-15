@@ -65,7 +65,7 @@ async function handleGetAvailableSlots(parameters) {
   if (!date || !appointment_type) {
     return {
       success: false,
-      error: "Date and appointment_type are required parameters"
+      message: "Potrebujem dátum a typ vyšetrenia na vyhľadanie voľných termínov."
     };
   }
 
@@ -74,31 +74,33 @@ async function handleGetAvailableSlots(parameters) {
     if (!typeValidation.isValid) {
       return {
         success: false,
-        error: typeValidation.error,
-        available_types: typeValidation.availableTypes
+        message: `Neplatný typ vyšetrenia. Dostupné typy sú: ${typeValidation.availableTypes.join(', ')}.`
       };
     }
 
     const availableSlots = await googleCalendar.getAvailableSlots(date, appointment_type);
     const typeConfig = config.appointmentTypes[appointment_type];
+    const formattedDate = dayjs(date).format('DD.MM.YYYY');
+    const dayName = dayjs(date).format('dddd');
 
+    if (availableSlots.length === 0) {
+      return {
+        success: true,
+        message: `Žiaľ, na ${dayName} ${formattedDate} nie sú dostupné žiadne voľné termíny pre ${typeConfig.name}.`
+      };
+    }
+
+    const slotTimes = availableSlots.slice(0, 10).map(slot => slot.time).join(', ');
+    const priceInfo = typeConfig.price === 0 ? 'hradí poisťovňa' : `${typeConfig.price}€`;
+    
     return {
       success: true,
-      date,
-      appointment_type: typeConfig.name,
-      total_slots: availableSlots.length,
-      slots: availableSlots.slice(0, 10).map(slot => ({
-        time: slot.time,
-        datetime: slot.datetime
-      })),
-      price: `${typeConfig.price}€`,
-      insurance_covered: typeConfig.insurance,
-      requirements: typeConfig.requirements
+      message: `Na ${dayName} ${formattedDate} sú dostupné tieto termíny pre ${typeConfig.name}: ${slotTimes}. Cena: ${priceInfo}.`
     };
   } catch (error) {
     return {
       success: false,
-      error: error.message
+      message: "Došlo k chybe pri vyhľadávaní voľných termínov. Skúste to prosím znovu."
     };
   }
 }
@@ -109,7 +111,7 @@ async function handleFindClosestSlot(parameters) {
   if (!appointment_type) {
     return {
       success: false,
-      error: "appointment_type is required"
+      message: "Potrebujem typ vyšetrenia na vyhľadanie najbližšieho termínu."
     };
   }
 
@@ -118,7 +120,7 @@ async function handleFindClosestSlot(parameters) {
     if (!typeValidation.isValid) {
       return {
         success: false,
-        error: typeValidation.error
+        message: `Neplatný typ vyšetrenia. Dostupné typy sú: ${typeValidation.availableTypes.join(', ')}.`
       };
     }
 
@@ -149,22 +151,26 @@ async function handleFindClosestSlot(parameters) {
     }
     
     if (foundSlot) {
+      const formattedDate = dayjs(foundSlot.date).format('DD.MM.YYYY');
+      const priceInfo = foundSlot.price === '0€' ? 'hradí poisťovňa' : foundSlot.price;
+      const dayPrefix = foundSlot.days_from_preferred === 0 ? 'dnes' : 
+                       foundSlot.days_from_preferred === 1 ? 'zajtra' : 
+                       `za ${foundSlot.days_from_preferred} dní`;
+      
       return {
         success: true,
-        found: true,
-        closest_slot: foundSlot
+        message: `Najbližší voľný termín pre ${foundSlot.appointment_type} je ${dayPrefix} (${foundSlot.day_name} ${formattedDate}) o ${foundSlot.time}. Cena: ${priceInfo}.`
       };
     } else {
       return {
         success: true,
-        found: false,
-        message: `Žiadne voľné termíny v najbližších ${days_to_search} dňoch`
+        message: `Žiaľ, v najbližších ${days_to_search} dňoch nie sú dostupné žiadne voľné termíny pre ${config.appointmentTypes[appointment_type].name}.`
       };
     }
   } catch (error) {
     return {
       success: false,
-      error: error.message
+      message: "Došlo k chybe pri vyhľadávaní najbližšieho termínu. Skúste to prosím znovu."
     };
   }
 }
@@ -184,7 +190,7 @@ async function handleBookAppointment(parameters) {
   if (!appointment_type || !date_time || !patient_name || !patient_surname || !phone || !insurance) {
     return {
       success: false,
-      error: "Povinné údaje: appointment_type, date_time, patient_name, patient_surname, phone, insurance"
+      message: "Na rezerváciu termínu potrebujem tieto údaje: typ vyšetrenia, dátum a čas, meno, priezvisko, telefónne číslo a poisťovňu."
     };
   }
 
@@ -212,14 +218,15 @@ async function handleBookAppointment(parameters) {
         5
       );
       
+      const errorMessage = `Termín sa nepodarilo rezervovať: ${validation.errors.join(', ')}`;
+      const altText = alternatives.length > 0 ? 
+        ` Alternatívne termíny: ${alternatives.slice(0, 3).map(alt => 
+          `${alt.dayName} ${dayjs(alt.date).format('DD.MM.')} (${alt.slots.slice(0, 2).map(s => s.time).join(', ')})`
+        ).join('; ')}.` : '';
+      
       return {
         success: false,
-        errors: validation.errors,
-        alternatives: alternatives.map(alt => ({
-          date: alt.date,
-          day_name: alt.dayName,
-          available_slots: alt.slots.slice(0, 3)
-        }))
+        message: errorMessage + altText
       };
     }
     
@@ -256,26 +263,19 @@ async function handleBookAppointment(parameters) {
       smsResult = await smsService.sendAppointmentConfirmation(smsData);
     }
     
+    const formattedDate = dayjs(date_time).format('DD.MM.YYYY');
+    const formattedTime = dayjs(date_time).format('HH:mm');
+    const dayName = dayjs(date_time).format('dddd');
+    const priceInfo = typeConfig.price === 0 ? 'hradí poisťovňa' : `${typeConfig.price}€`;
+    
     return {
       success: true,
-      message: "Termín bol úspešne rezervovaný",
-      appointment: {
-        id: event.id,
-        patient_name: `${patient_name} ${patient_surname}`,
-        appointment_type: typeConfig.name,
-        date: dayjs(date_time).format('DD.MM.YYYY'),
-        time: dayjs(date_time).format('HH:mm'),
-        order_number: orderNumber,
-        price: `${typeConfig.price}€`,
-        insurance_covered: typeConfig.insurance,
-        requirements: typeConfig.requirements
-      },
-      sms_sent: smsResult?.success || false
+      message: `Termín bol úspešne rezervovaný. ${patient_name} ${patient_surname} má objednaný ${typeConfig.name} na ${dayName} ${formattedDate} o ${formattedTime}. Poradové číslo: ${orderNumber}. Cena: ${priceInfo}. ${smsResult?.success ? 'SMS potvrdenie bolo odoslané.' : ''}`
     };
   } catch (error) {
     return {
       success: false,
-      error: error.message
+      message: "Došlo k chybe pri rezervácii termínu. Skúste to prosím znovu."
     };
   }
 }
@@ -286,7 +286,7 @@ async function handleCancelAppointment(parameters) {
   if (!patient_name || !phone || !appointment_date) {
     return {
       success: false,
-      error: "Povinné údaje: patient_name, phone, appointment_date"
+      message: "Na zrušenie termínu potrebujem meno pacienta, telefónne číslo a dátum termínu."
     };
   }
 
@@ -297,7 +297,7 @@ async function handleCancelAppointment(parameters) {
     if (!event) {
       return {
         success: false,
-        error: "Termín sa nenašiel. Skontrolujte prosím meno, telefón a dátum."
+        message: "Termín sa nenašiel. Skontrolujte prosím meno, telefónne číslo a dátum termínu."
       };
     }
     
@@ -316,15 +316,13 @@ async function handleCancelAppointment(parameters) {
       smsResult = await smsService.sendCancellationNotification(appointmentData);
     }
     
+    const formattedDate = dayjs(appointment_date).format('DD.MM.YYYY');
+    const formattedTime = dayjs(event.start.dateTime).format('HH:mm');
+    const smsText = smsResult?.success ? ' SMS potvrdenie o zrušení bolo odoslané.' : '';
+    
     return {
       success: true,
-      message: "Termín bol úspešne zrušený",
-      cancelled_appointment: {
-        patient_name: patient_name,
-        date: dayjs(appointment_date).format('DD.MM.YYYY'),
-        time: dayjs(event.start.dateTime).format('HH:mm')
-      },
-      sms_sent: smsResult?.success || false
+      message: `Termín bol úspešne zrušený. ${patient_name} mal objednaný termín na ${formattedDate} o ${formattedTime}.${smsText}`
     };
   } catch (error) {
     return {
@@ -340,7 +338,7 @@ async function handleRescheduleAppointment(parameters) {
   if (!patient_name || !phone || !old_date || !new_date_time) {
     return {
       success: false,
-      error: "Povinné údaje: patient_name, phone, old_date, new_date_time"
+      message: "Na presunutie termínu potrebujem meno pacienta, telefónne číslo, pôvodný dátum a nový dátum s časom."
     };
   }
 
@@ -418,19 +416,16 @@ async function handleRescheduleAppointment(parameters) {
       smsResult = await smsService.sendRescheduleNotification(oldAppointment, newAppointment);
     }
     
+    const oldDate = dayjs(old_date).format('DD.MM.YYYY');
+    const oldTime = dayjs(existingEvent.start.dateTime).format('HH:mm');
+    const newDate = dayjs(new_date_time).format('DD.MM.YYYY');
+    const newTime = dayjs(new_date_time).format('HH:mm');
+    const newDayName = dayjs(new_date_time).format('dddd');
+    const smsText = smsResult?.success ? ' SMS potvrdenie o presunutí bolo odoslané.' : '';
+    
     return {
       success: true,
-      message: "Termín bol úspešne presunutý",
-      old_appointment: {
-        date: dayjs(old_date).format('DD.MM.YYYY'),
-        time: dayjs(existingEvent.start.dateTime).format('HH:mm')
-      },
-      new_appointment: {
-        date: dayjs(new_date_time).format('DD.MM.YYYY'),
-        time: dayjs(new_date_time).format('HH:mm'),
-        order_number: newOrderNumber
-      },
-      sms_sent: smsResult?.success || false
+      message: `Termín bol úspešne presunutý. Pôvodný termín ${oldDate} o ${oldTime} bol presunutý na ${newDayName} ${newDate} o ${newTime}. Nové poradové číslo: ${newOrderNumber}.${smsText}`
     };
   } catch (error) {
     return {
@@ -446,7 +441,7 @@ async function handleSendFallbackSms(parameters) {
   if (!phone || !message) {
     return {
       success: false,
-      error: "phone and message are required"
+      message: "Na odoslanie SMS potrebujem telefónne číslo a správu."
     };
   }
 
@@ -455,8 +450,9 @@ async function handleSendFallbackSms(parameters) {
     
     return {
       success: result.success,
-      message: result.success ? "SMS odoslaná" : "SMS sa nepodarilo odoslať",
-      sms_details: result
+      message: result.success ? 
+        `SMS správa bola úspešne odoslaná na číslo ${phone}.` : 
+        `SMS sa nepodarilo odoslať na číslo ${phone}. ${result.reason || 'Skúste to prosím znovu.'}`
     };
   } catch (error) {
     return {

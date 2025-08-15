@@ -16,32 +16,74 @@ class GoogleCalendarService {
 
   async initialize() {
     try {
+      console.log('🔧 Initializing Google Calendar service...');
+      
       // Try environment variables first (for production)
       let credentials;
       if (process.env.GOOGLE_CREDENTIALS) {
-        credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+        console.log('📝 Using GOOGLE_CREDENTIALS from environment');
+        try {
+          credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+          console.log('✅ Successfully parsed GOOGLE_CREDENTIALS JSON');
+          console.log('🔑 Credential keys:', Object.keys(credentials));
+          
+          // Check if private_key looks valid
+          if (credentials.private_key) {
+            const pkeyStart = credentials.private_key.substring(0, 50);
+            console.log('🔐 Private key starts with:', pkeyStart);
+            
+            // Check for proper line breaks
+            if (credentials.private_key.includes('\\n')) {
+              console.log('⚠️  Private key contains \\n - might need unescaping');
+              credentials.private_key = credentials.private_key.replace(/\\n/g, '\n');
+              console.log('🔧 Converted \\n to actual newlines');
+            }
+          }
+        } catch (parseError) {
+          console.error('❌ Failed to parse GOOGLE_CREDENTIALS JSON:', parseError);
+          throw parseError;
+        }
       } else {
+        console.log('📁 Using credentials from file (local development)');
         // Fallback to file (for local development)
         try {
           credentials = require(config.calendar.credentials);
+          console.log('✅ Successfully loaded credentials from file');
         } catch (error) {
+          console.error('❌ Credentials file not found:', error);
           throw new Error('Google credentials not found. Set GOOGLE_CREDENTIALS environment variable or provide credentials.json file.');
         }
       }
       
+      console.log('🔐 Creating GoogleAuth with credentials...');
       this.auth = new google.auth.GoogleAuth({
         credentials: credentials,
         scopes: ['https://www.googleapis.com/auth/calendar']
       });
 
+      console.log('🌐 Getting auth client...');
       const authClient = await this.auth.getClient();
+      console.log('✅ Auth client obtained successfully');
+      
       this.calendar = google.calendar({ version: 'v3', auth: authClient });
       this.initialized = true;
       
-      console.log('Google Calendar service initialized successfully');
+      console.log('✅ Google Calendar service initialized successfully');
+      
+      // Test the connection with a simple API call
+      console.log('🧪 Testing calendar connection...');
+      try {
+        const testResponse = await this.calendar.calendarList.list({ maxResults: 1 });
+        console.log('✅ Calendar connection test successful');
+      } catch (testError) {
+        console.error('❌ Calendar connection test failed:', testError.message);
+        throw testError;
+      }
+      
       return true;
     } catch (error) {
-      console.error('Failed to initialize Google Calendar service:', error);
+      console.error('❌ Failed to initialize Google Calendar service:', error.message);
+      console.error('🔍 Full error:', error);
       throw error;
     }
   }
@@ -90,6 +132,7 @@ class GoogleCalendarService {
     await this.ensureInitialized();
     
     try {
+      console.log(`📅 Getting events from ${startDate} to ${endDate}`);
       const response = await this.calendar.events.list({
         calendarId: config.calendar.calendarId,
         timeMin: dayjs(startDate).tz(config.calendar.timeZone).startOf('day').toISOString(),
@@ -98,9 +141,11 @@ class GoogleCalendarService {
         orderBy: 'startTime'
       });
 
+      console.log(`✅ Retrieved ${response.data.items?.length || 0} events`);
       return response.data.items || [];
     } catch (error) {
-      console.error('Failed to retrieve calendar events:', error);
+      console.error('❌ Failed to retrieve calendar events:', error.message);
+      console.error('🔍 Full error:', error);
       throw error;
     }
   }

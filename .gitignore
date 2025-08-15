@@ -23,7 +23,8 @@ pids/
 *.seed
 
 # Credentials (keep credentials.json as it's needed for deployment)
-# credentials.json
+credentials.json
+new_credentials.json
 
 # OS generated files
 .DS_Store
