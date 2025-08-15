@@ -138,14 +138,6 @@ Príklad privítania: "Dobrý deň, volajte do Rehacentra Humenné. Som Vaša as
           "insurance": {
             "type": "string",
             "description": "Názov poisťovne"
-          },
-          "email": {
-            "type": "string",
-            "description": "Email adresa (nepovinné)"
-          },
-          "birth_id": {
-            "type": "string",
-            "description": "Rodné číslo (nepovinné)"
           }
         },
         "required": ["appointment_type", "date_time", "patient_name", "patient_surname", "phone", "insurance"]

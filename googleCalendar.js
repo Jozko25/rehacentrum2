@@ -98,8 +98,12 @@ class GoogleCalendarService {
     await this.ensureInitialized();
     
     try {
+      // Get appointment type configuration for proper Slovak name
+      const typeConfig = config.appointmentTypes[eventData.appointmentType];
+      const appointmentName = typeConfig ? typeConfig.name : eventData.appointmentType;
+      
       const event = {
-        summary: `${eventData.appointmentType.toUpperCase()} - ${eventData.patientName}`,
+        summary: `${appointmentName} - ${eventData.patientName}`,
         description: this.formatEventDescription(eventData),
         start: {
           dateTime: dayjs(eventData.dateTime).tz(config.calendar.timeZone).format(),
@@ -112,7 +116,7 @@ class GoogleCalendarService {
             .format(),
           timeZone: config.calendar.timeZone
         },
-        colorId: eventData.colorId || '1'
+        colorId: eventData.colorId || typeConfig?.color || '1'
       };
 
       const response = await this.calendar.events.insert({
@@ -261,16 +265,15 @@ class GoogleCalendarService {
 
   formatEventDescription(eventData) {
     const orderNumber = eventData.orderNumber ? `🔢 PORADOVÉ ČÍSLO: ${eventData.orderNumber}\n\n` : '';
+    const priceText = eventData.price === 0 ? 'hradí poisťovňa' : `${eventData.price}€`;
     
-    return `${orderNumber}Appointment Type: ${eventData.appointmentType}
-Patient: ${eventData.patientName}
-Phone: ${eventData.phone}
-Insurance: ${eventData.insurance || 'N/A'}
-Email: ${eventData.email || 'N/A'}
-Birth ID: ${eventData.birthId || 'N/A'}
-Duration: ${eventData.duration || 30} minutes
-Price: ${eventData.price || 0}€
-Created: ${dayjs().tz(config.calendar.timeZone).format('YYYY-MM-DD HH:mm:ss')}`;
+    return `${orderNumber}Typ vyšetrenia: ${eventData.appointmentType}
+Pacient: ${eventData.patientName}
+Telefón: ${eventData.phone}
+Poisťovňa: ${eventData.insurance || 'N/A'}
+Trvanie: ${eventData.duration || 30} minút
+Cena: ${priceText}
+Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')}`;
   }
 
   async getOrderNumber(appointmentType, date) {

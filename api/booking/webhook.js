@@ -182,9 +182,7 @@ async function handleBookAppointment(parameters) {
     patient_name, 
     patient_surname, 
     phone, 
-    insurance, 
-    email, 
-    birth_id 
+    insurance
   } = parameters;
   
   if (!appointment_type || !date_time || !patient_name || !patient_surname || !phone || !insurance) {
@@ -199,9 +197,7 @@ async function handleBookAppointment(parameters) {
       name: patient_name,
       surname: patient_surname,
       phone: phone,
-      insurance: insurance,
-      email: email || '',
-      birthId: birth_id || ''
+      insurance: insurance
     };
 
     // Validate complete appointment
@@ -241,8 +237,6 @@ async function handleBookAppointment(parameters) {
       patientName: `${patient_name} ${patient_surname}`,
       phone: phone,
       insurance: insurance,
-      email: email,
-      birthId: birth_id,
       dateTime: date_time,
       duration: typeConfig.duration,
       price: typeConfig.price,
