@@ -102,17 +102,25 @@ class GoogleCalendarService {
       const typeConfig = config.appointmentTypes[eventData.appointmentType];
       const appointmentName = typeConfig ? typeConfig.name : eventData.appointmentType;
       
+      const startDateTime = dayjs(eventData.dateTime, undefined, config.calendar.timeZone).format();
+      const endDateTime = dayjs(eventData.dateTime, undefined, config.calendar.timeZone)
+        .add(eventData.duration || 30, 'minute')
+        .format();
+      
+      console.log(`🕐 Creating calendar event:`);
+      console.log(`   Input dateTime: ${eventData.dateTime}`);
+      console.log(`   Parsed start: ${startDateTime}`);
+      console.log(`   Parsed end: ${endDateTime}`);
+      
       const event = {
         summary: `${appointmentName} - ${eventData.patientName}`,
         description: this.formatEventDescription(eventData),
         start: {
-          dateTime: dayjs(eventData.dateTime, undefined, config.calendar.timeZone).format(),
+          dateTime: startDateTime,
           timeZone: config.calendar.timeZone
         },
         end: {
-          dateTime: dayjs(eventData.dateTime, undefined, config.calendar.timeZone)
-            .add(eventData.duration || 30, 'minute')
-            .format(),
+          dateTime: endDateTime,
           timeZone: config.calendar.timeZone
         },
         colorId: eventData.colorId || typeConfig?.color || '1'
