@@ -427,10 +427,16 @@ async function handleCancelAppointment(parameters) {
 }
 
 async function handleRescheduleAppointment(parameters) {
-  const { patient_name, full_patient_name, phone, old_date, new_date_time } = parameters;
+  const { patient_name, full_patient_name, phone, old_date, new_date_time, new_date, new_time } = parameters;
   const patientName = patient_name || full_patient_name;
   
-  if (!patientName || !phone || !old_date || !new_date_time) {
+  // Handle both formats: combined new_date_time or separate new_date + new_time
+  let finalNewDateTime = new_date_time;
+  if (!finalNewDateTime && new_date && new_time) {
+    finalNewDateTime = `${new_date}T${new_time}:00`;
+  }
+  
+  if (!patientName || !phone || !old_date || !finalNewDateTime) {
     return {
       success: false,
       message: "Na presunutie termínu potrebujem meno pacienta, telefónne číslo, pôvodný dátum a nový dátum s časom."
@@ -463,7 +469,7 @@ async function handleRescheduleAppointment(parameters) {
     }
     
     // Validate new slot
-    const slotValidation = await appointmentValidator.validateSlotAvailability(new_date_time, appointmentType);
+    const slotValidation = await appointmentValidator.validateSlotAvailability(finalNewDateTime, appointmentType);
     if (!slotValidation.isValid) {
       return {
         success: false,
@@ -477,14 +483,14 @@ async function handleRescheduleAppointment(parameters) {
     
     // Create new appointment
     const typeConfig = config.appointmentTypes[appointmentType];
-    const newOrderNumber = await googleCalendar.getOrderNumber(appointmentType, dayjs(new_date_time).format('YYYY-MM-DD'));
+    const newOrderNumber = await googleCalendar.getOrderNumber(appointmentType, dayjs(finalNewDateTime).format('YYYY-MM-DD'));
     
     const eventData = {
       appointmentType: appointmentType,
       patientName: patientName,
       phone: phone,
       insurance: 'Existing patient', // Preserve from original
-      dateTime: new_date_time,
+      dateTime: finalNewDateTime,
       duration: typeConfig.duration,
       price: typeConfig.price,
       colorId: typeConfig.color,
@@ -504,8 +510,8 @@ async function handleRescheduleAppointment(parameters) {
       const newAppointment = {
         patientName: patientName,
         phone: phone,
-        date: dayjs(new_date_time).format('DD.MM.YYYY'),
-        time: dayjs(new_date_time).format('HH:mm'),
+        date: dayjs(finalNewDateTime).format('DD.MM.YYYY'),
+        time: dayjs(finalNewDateTime).format('HH:mm'),
         orderNumber: newOrderNumber
       };
       
@@ -514,9 +520,9 @@ async function handleRescheduleAppointment(parameters) {
     
     const oldDate = dayjs(old_date).format('DD.MM.YYYY');
     const oldTime = dayjs(existingEvent.start.dateTime).tz(config.calendar.timeZone).format('HH:mm');
-    const newDate = dayjs(new_date_time).format('DD.MM.YYYY');
-    const newTime = dayjs(new_date_time).format('HH:mm');
-    const newDayName = dayjs(new_date_time).format('dddd');
+    const newDate = dayjs(finalNewDateTime).format('DD.MM.YYYY');
+    const newTime = dayjs(finalNewDateTime).format('HH:mm');
+    const newDayName = dayjs(finalNewDateTime).format('dddd');
     const smsText = smsResult?.success ? ' SMS potvrdenie o presunutí bolo odoslané.' : '';
     
     return {
