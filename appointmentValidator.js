@@ -134,7 +134,7 @@ class AppointmentValidator {
     if (!isValidTime) {
       return { 
         isValid: false, 
-        error: `Invalid time slot for ${typeConfig.name}`,
+        error: `Invalid time slot for ${typeConfig.name}. Time ${appointmentTime} not in range ${typeConfig.schedule.map(s => `${s.start}-${s.end}`).join(', ')}`,
         availableSchedule: typeConfig.schedule
       };
     }
@@ -151,7 +151,7 @@ class AppointmentValidator {
     if (!isValidInterval) {
       return { 
         isValid: false, 
-        error: 'Time slot does not align with available intervals',
+        error: `Time slot ${appointmentTime} does not align with intervals. Available intervals: ${typeConfig.schedule.map(s => `${s.start} every ${s.interval}min`).join(', ')}`,
         scheduleInfo: typeConfig.schedule
       };
     }
