@@ -167,6 +167,15 @@
           "dynamic_variable": "",
           "constant_value": "",
           "required": false
+        },
+        {
+          "id": "appointment_date",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Dátum termínu pre zrušenie vo formáte YYYY-MM-DD",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
         }
       ],
       "required": false,
