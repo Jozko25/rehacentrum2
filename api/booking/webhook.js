@@ -513,7 +513,7 @@ async function handleRescheduleAppointment(parameters) {
     }
     
     const oldDate = dayjs(old_date).format('DD.MM.YYYY');
-    const oldTime = dayjs(existingEvent.start.dateTime).format('HH:mm');
+    const oldTime = dayjs(existingEvent.start.dateTime).tz(config.calendar.timeZone).format('HH:mm');
     const newDate = dayjs(new_date_time).format('DD.MM.YYYY');
     const newTime = dayjs(new_date_time).format('HH:mm');
     const newDayName = dayjs(new_date_time).format('dddd');
