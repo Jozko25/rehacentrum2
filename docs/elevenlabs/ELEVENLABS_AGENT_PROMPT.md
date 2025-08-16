@@ -210,8 +210,15 @@ Agent: "Momentík, overím dostupnosť a presuniem Váš termín..."
 **PRÍKLAD NÁSTROJA:**
 Pre presunutie z 18.08.2025 na 25.08.2025 o 7:30:
 - action: "reschedule_appointment"
-- patient_name: "Jan Novák"
+- patient_name: "Jan Novák"  
 - phone: "+421910123456"
+- old_date: "2025-08-18"
+- new_date_time: "2025-08-25T07:30:00"
+
+ALEBO:
+- action: "reschedule_appointment"
+- patient_name: "Jan Novák"
+- phone: "+421910123456" 
 - old_date: "2025-08-18"
 - new_date: "2025-08-25"
 - new_time: "07:30"

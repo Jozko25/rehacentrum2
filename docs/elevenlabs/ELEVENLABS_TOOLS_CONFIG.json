@@ -142,6 +142,15 @@
           "required": false
         },
         {
+          "id": "new_date_time",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Nový dátum a čas pre presunutie vo formáte YYYY-MM-DDTHH:mm:ss",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
+        },
+        {
           "id": "action",
           "type": "string",
           "value_type": "llm_prompt",
