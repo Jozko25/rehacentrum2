@@ -108,10 +108,7 @@ class GoogleCalendarService {
         .add(eventData.duration || 30, 'minute')
         .format('YYYY-MM-DDTHH:mm:ss') + '+02:00';
       
-      console.log(`🕐 Creating calendar event:`);
-      console.log(`   Input dateTime: ${eventData.dateTime}`);
-      console.log(`   Parsed start: ${startDateTime}`);
-      console.log(`   Parsed end: ${endDateTime}`);
+
       
       const event = {
         summary: `${appointmentName} - ${eventData.patientName}`,
