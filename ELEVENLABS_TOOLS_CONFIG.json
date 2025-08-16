@@ -1,151 +1,137 @@
 {
-  "tools": [
-    {
-      "name": "get_available_slots",
-      "description": "Vyhľadá všetky voľné termíny pre konkrétny dátum a typ vyšetrenia",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string",
-            "description": "Dátum v formáte YYYY-MM-DD"
-          },
-          "appointment_type": {
-            "type": "string",
-            "enum": ["sportova_prehliadka", "vstupne_vysetrenie", "kontrolne_vysetrenie", "zdravotnicke_pomocky", "konzultacia"],
-            "description": "Typ vyšetrenia"
-          }
+  "name": "booking_system",
+  "description": "Kompletný systém rezervácie termínov pre Rehacentrum Humenné. Môže vyhľadávať voľné termíny, rezervovať, rušiť a presúvať termíny.",
+  "disable_interruptions": false,
+  "force_pre_tool_speech": "auto",
+  "assignments": [],
+  "type": "webhook",
+  "api_schema": {
+    "url": "https://rehacentrum2-production.up.railway.app/api/booking/webhook",
+    "method": "POST",
+    "path_params_schema": [],
+    "query_params_schema": [],
+    "request_body_schema": {
+      "id": "body",
+      "type": "object",
+      "description": "Booking system request",
+      "properties": [
+        {
+          "id": "preferred_time",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Preferovaný čas dňa: morning alebo afternoon",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
         },
-        "required": ["date", "appointment_type"]
-      }
+        {
+          "id": "date",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Dátum vo formáte YYYY-MM-DD",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
+        },
+        {
+          "id": "time",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Čas vo formáte HH:MM",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
+        },
+        {
+          "id": "phone",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Telefónne číslo pacienta pre overenie",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
+        },
+        {
+          "id": "appointment_type",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Typ vyšetrenia: sportova_prehliadka, vstupne_vysetrenie, kontrolne_vysetrenie, zdravotnicke_pomucky, konzultacia",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
+        },
+        {
+          "id": "patient_data",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "JSON string s údajmi pacienta pre rezerváciu: {\"meno\": \"Ján\", \"priezvisko\": \"Novák\", \"telefon\": \"+421900123456\", \"poistovna\": \"VšZP\"}",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
+        },
+        {
+          "id": "old_date",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Pôvodný dátum pre presunutie vo formáte YYYY-MM-DD",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
+        },
+        {
+          "id": "patient_name",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Celé meno pacienta pre zrušenie/presunutie",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
+        },
+        {
+          "id": "old_time",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Pôvodný čas pre presunutie vo formáte HH:MM",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
+        },
+        {
+          "id": "new_time",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Nový čas pre presunutie vo formáte HH:MM",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
+        },
+        {
+          "id": "new_date",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Nový dátum pre presunutie vo formáte YYYY-MM-DD",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
+        },
+        {
+          "id": "action",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Typ akcie: get_available_slots, find_closest_slot, book_appointment, cancel_appointment, reschedule_appointment",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": true
+        }
+      ],
+      "required": false,
+      "value_type": "llm_prompt"
     },
-    {
-      "name": "find_closest_slot",
-      "description": "Nájde najbližší voľný termín pre daný typ vyšetrenia",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "appointment_type": {
-            "type": "string",
-            "enum": ["sportova_prehliadka", "vstupne_vysetrenie", "kontrolne_vysetrenie", "zdravotnicke_pomocky", "konzultacia"],
-            "description": "Typ vyšetrenia"
-          },
-          "preferred_date": {
-            "type": "string",
-            "description": "Preferovaný dátum v formáte YYYY-MM-DD (nepovinné)"
-          },
-          "days_to_search": {
-            "type": "integer",
-            "description": "Počet dní na vyhľadávanie (predvolené: 7)",
-            "default": 7
-          }
-        },
-        "required": ["appointment_type"]
-      }
-    },
-    {
-      "name": "book_appointment",
-      "description": "Vytvorí novú rezerváciu termínu",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "appointment_type": {
-            "type": "string",
-            "enum": ["sportova_prehliadka", "vstupne_vysetrenie", "kontrolne_vysetrenie", "zdravotnicke_pomocky", "konzultacia"],
-            "description": "Typ vyšetrenia"
-          },
-          "date_time": {
-            "type": "string",
-            "description": "Dátum a čas termínu v ISO formáte (YYYY-MM-DDTHH:mm:ss)"
-          },
-          "patient_name": {
-            "type": "string",
-            "description": "Meno pacienta"
-          },
-          "patient_surname": {
-            "type": "string",
-            "description": "Priezvisko pacienta"
-          },
-          "phone": {
-            "type": "string",
-            "description": "Telefónne číslo v formáte +421XXXXXXXXX"
-          },
-          "insurance": {
-            "type": "string",
-            "description": "Názov poisťovne"
-          }
-        },
-        "required": ["appointment_type", "date_time", "patient_name", "patient_surname", "phone", "insurance"]
-      }
-    },
-    {
-      "name": "cancel_appointment",
-      "description": "Zruší existujúci termín - vyžaduje overenie totožnosti pacienta",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "patient_name": {
-            "type": "string",
-            "description": "Meno a priezvisko pacienta"
-          },
-          "phone": {
-            "type": "string",
-            "description": "Telefónne číslo pacienta"
-          },
-          "appointment_date": {
-            "type": "string",
-            "description": "Dátum termínu v formáte YYYY-MM-DD"
-          }
-        },
-        "required": ["patient_name", "phone", "appointment_date"]
-      }
-    },
-    {
-      "name": "reschedule_appointment",
-      "description": "Presunie existujúci termín na nový dátum a čas",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "patient_name": {
-            "type": "string",
-            "description": "Meno a priezvisko pacienta"
-          },
-          "phone": {
-            "type": "string",
-            "description": "Telefónne číslo pacienta"
-          },
-          "old_date": {
-            "type": "string",
-            "description": "Pôvodný dátum termínu v formáte YYYY-MM-DD"
-          },
-          "new_date_time": {
-            "type": "string",
-            "description": "Nový dátum a čas v ISO formáte (YYYY-MM-DDTHH:mm:ss)"
-          }
-        },
-        "required": ["patient_name", "phone", "old_date", "new_date_time"]
-      }
-    },
-    {
-      "name": "send_fallback_sms",
-      "description": "Pošle SMS správu keď AI asistent nedokáže dokončiť rezerváciu",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "phone": {
-            "type": "string",
-            "description": "Telefónne číslo pacienta"
-          },
-          "message": {
-            "type": "string",
-            "description": "Obsah SMS správy"
-          }
-        },
-        "required": ["phone", "message"]
-      }
-    }
-  ],
-  "webhook_url": "https://rehacentrum2-production.up.railway.app/api/booking/webhook",
-  "webhook_method": "POST",
-  "webhook_timeout": 30000
+    "request_headers": [],
+    "auth_connection": null
+  },
+  "response_timeout_secs": 30,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  }
 }

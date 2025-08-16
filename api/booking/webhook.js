@@ -1,6 +1,14 @@
 const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc');
 const timezone = require('dayjs/plugin/timezone');
+const localeData = require('dayjs/plugin/localeData');
+require('dayjs/locale/sk');
+
+// Configure dayjs with Slovak locale
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(localeData);
+dayjs.locale('sk');
 
 // Import services
 const config = require('../../config');
@@ -9,6 +17,71 @@ const appointmentValidator = require('../../appointmentValidator');
 const smsService = require('../../smsService');
 const holidayService = require('../../holidayService');
 const { addLog } = require('../../lib/logger');
+
+// Handle getting more available slots
+async function handleGetMoreSlots(parameters) {
+  const { date, appointment_type, current_count = 2 } = parameters;
+  
+  if (!date || !appointment_type) {
+    return {
+      success: false,
+      message: "Došla k chybe"
+    };
+  }
+
+  try {
+    const typeValidation = appointmentValidator.validateAppointmentType(appointment_type);
+    if (!typeValidation.isValid) {
+      return {
+        success: false,
+        message: "Došla k chybe"
+      };
+    }
+
+    const availableSlots = await googleCalendar.getAvailableSlots(date, appointment_type);
+    const typeConfig = config.appointmentTypes[appointment_type];
+    const formattedDate = dayjs(date).format('DD.MM.YYYY');
+    const dayName = dayjs(date).format('dddd');
+
+    if (availableSlots.length === 0) {
+      return {
+        success: true,
+        message: `Žiaľ, na ${dayName} ${formattedDate} nie sú dostupné žiadne voľné termíny pre ${typeConfig.name}.`
+      };
+    }
+
+    // Show one more slot than currently shown
+    const newCount = current_count + 1;
+    const slotsToShow = availableSlots.slice(0, newCount);
+    
+    if (slotsToShow.length <= current_count) {
+      return {
+        success: true,
+        message: `To sú všetky dostupné termíny pre ${typeConfig.name} na ${dayName} ${formattedDate}.`
+      };
+    }
+
+    const slotTimes = slotsToShow.map(slot => slot.time).join(', ');
+    const priceInfo = typeConfig.price === 0 ? 'hradí poisťovňa' : `${typeConfig.price}€`;
+    
+    let message = `Na ${dayName} ${formattedDate} sú dostupné tieto termíny pre ${typeConfig.name}: ${slotTimes}. Cena: ${priceInfo}.`;
+    
+    // Add hint if there are more slots available
+    if (availableSlots.length > slotsToShow.length) {
+      message += ` Máme ešte ďalšie voľné termíny ak potrebujete.`;
+    }
+    
+    return {
+      success: true,
+      message: message
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "Došla k chybe"
+    };
+  }
+}
 
 // Function to log webhook calls to persistent storage
 async function logWebhookCall(action, requestData, responseData) {
@@ -60,12 +133,12 @@ async function initializeServices() {
 }
 
 async function handleGetAvailableSlots(parameters) {
-  const { date, appointment_type } = parameters;
+  const { date, appointment_type, offset = 0, show_more = false } = parameters;
   
   if (!date || !appointment_type) {
     return {
       success: false,
-      message: "Potrebujem dátum a typ vyšetrenia na vyhľadanie voľných termínov."
+      message: "Došla k chybe"
     };
   }
 
@@ -74,7 +147,7 @@ async function handleGetAvailableSlots(parameters) {
     if (!typeValidation.isValid) {
       return {
         success: false,
-        message: `Neplatný typ vyšetrenia. Dostupné typy sú: ${typeValidation.availableTypes.join(', ')}.`
+        message: "Došla k chybe"
       };
     }
 
@@ -90,17 +163,34 @@ async function handleGetAvailableSlots(parameters) {
       };
     }
 
-    const slotTimes = availableSlots.slice(0, 10).map(slot => slot.time).join(', ');
+    // Progressive slot loading
+    let slotsToShow;
+    if (show_more && offset > 0) {
+      // Show one additional slot when requesting more
+      slotsToShow = availableSlots.slice(0, offset + 1);
+    } else {
+      // Show first 2 slots initially
+      slotsToShow = availableSlots.slice(0, 2);
+    }
+
+    const slotTimes = slotsToShow.map(slot => slot.time).join(', ');
     const priceInfo = typeConfig.price === 0 ? 'hradí poisťovňa' : `${typeConfig.price}€`;
+    
+    let message = `Na ${dayName} ${formattedDate} sú dostupné tieto termíny pre ${typeConfig.name}: ${slotTimes}. Cena: ${priceInfo}.`;
+    
+    // Add hint if there are more slots available
+    if (availableSlots.length > slotsToShow.length) {
+      message += ` Máme ešte ďalšie voľné termíny ak potrebujete.`;
+    }
     
     return {
       success: true,
-      message: `Na ${dayName} ${formattedDate} sú dostupné tieto termíny pre ${typeConfig.name}: ${slotTimes}. Cena: ${priceInfo}.`
+      message: message
     };
   } catch (error) {
     return {
       success: false,
-      message: "Došlo k chybe pri vyhľadávaní voľných termínov. Skúste to prosím znovu."
+      message: "Došla k chybe"
     };
   }
 }
@@ -170,7 +260,7 @@ async function handleFindClosestSlot(parameters) {
   } catch (error) {
     return {
       success: false,
-      message: "Došlo k chybe pri vyhľadávaní najbližšieho termínu. Skúste to prosím znovu."
+      message: "Došla k chybe"
     };
   }
 }
@@ -269,7 +359,7 @@ async function handleBookAppointment(parameters) {
   } catch (error) {
     return {
       success: false,
-      message: "Došlo k chybe pri rezervácii termínu. Skúste to prosím znovu."
+      message: "Došla k chybe"
     };
   }
 }
@@ -473,19 +563,22 @@ module.exports = async (req, res) => {
   };
   
   if (req.method !== 'POST') {
+    const errorMessage = 'Došla k chybe';
     const errorResponse = { 
       error: 'Method not allowed',
-      message: 'Only POST requests are supported'
+      message: errorMessage
     };
     
     addLog('webhook', `${req.method} ${req.url} - 405`, null, requestData, errorResponse);
-    return res.status(405).json(errorResponse);
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    return res.status(405).send(errorMessage);
   }
 
   try {
     const { action, parameters } = req.body;
     
     if (!action) {
+      const errorMessage = 'Došla k chybe';
       const errorResponse = {
         error: 'Missing action parameter',
         supported_actions: [
@@ -499,7 +592,8 @@ module.exports = async (req, res) => {
       };
       
       addLog('webhook', `${req.method} ${req.url} - 400 (no action)`, null, requestData, errorResponse);
-      return res.status(400).json(errorResponse);
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.status(400).send(errorMessage);
     }
 
     addLog('webhook', `ElevenLabs webhook: ${action}`, parameters);
@@ -531,18 +625,14 @@ module.exports = async (req, res) => {
         result = await handleSendFallbackSms(parameters || {});
         break;
         
+      case 'get_more_slots':
+        result = await handleGetMoreSlots(parameters || {});
+        break;
+        
       default:
         result = {
           success: false,
-          error: `Unsupported action: ${action}`,
-          supported_actions: [
-            'get_available_slots',
-            'find_closest_slot',
-            'book_appointment', 
-            'cancel_appointment',
-            'reschedule_appointment',
-            'send_fallback_sms'
-          ]
+          message: 'Došla k chybe'
         };
     }
     
@@ -550,16 +640,20 @@ module.exports = async (req, res) => {
     await logWebhookCall(action, requestData, result);
     addLog('webhook', `${action} - ${result.success ? 'SUCCESS' : 'ERROR'}`, null, requestData, result);
     
-    res.json(result);
+    // Return plain text response instead of JSON
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.send(result.message || result.error || 'Neočakávaná chyba');
   } catch (error) {
+    const errorMessage = 'Došla k chybe';
     const errorResponse = {
       success: false,
       error: 'Internal server error',
-      message: 'Došlo k chybe. Skúste to prosím znovu.'
+      message: errorMessage
     };
     
     addLog('webhook', `${req.method} ${req.url} - 500 (${error.message})`, null, requestData, errorResponse);
     
-    res.status(500).json(errorResponse);
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.status(500).send(errorMessage);
   }
 };
