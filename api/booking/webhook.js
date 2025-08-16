@@ -384,7 +384,14 @@ async function handleBookAppointment(parameters) {
     
     // Add price and requirements for paid appointments
     if (typeConfig.price > 0) {
-      successMessage += ` Cena: ${typeConfig.price}€. DÔLEŽITÉ: Prísť nalačno (8 hodín), prineste si jedlo a vodu po vyšetrení, športové oblečenie a uterák.`;
+      successMessage += ` Cena: ${typeConfig.price}€.`;
+      
+      // Add specific requirements based on appointment type
+      if (appointment_type === 'sportova_prehliadka') {
+        successMessage += ' DÔLEŽITÉ: Prísť nalačno (8 hodín), prineste si jedlo a vodu po vyšetrení, športové oblečenie a uterák.';
+      } else if (appointment_type === 'konzultacia') {
+        successMessage += ' Platba hotovosťou.';
+      }
     }
     
     // Add SMS confirmation
