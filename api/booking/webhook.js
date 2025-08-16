@@ -448,9 +448,34 @@ async function handleRescheduleAppointment(parameters) {
     const existingEvent = await googleCalendar.findEventByPatient(patientName, phone, old_date);
     
     if (!existingEvent) {
+      // Try to find similar appointments for better error message
+      const allEvents = await googleCalendar.getEventsForDay(old_date);
+      const similarEvents = allEvents.filter(event => {
+        const description = (event.description || '').toLowerCase();
+        const summary = (event.summary || '').toLowerCase();
+        const nameParts = patientName.toLowerCase().split(/\s+/);
+        
+        return nameParts.some(part => 
+          part.length > 2 && (description.includes(part) || summary.includes(part))
+        );
+      });
+      
+      let errorMessage = "Pôvodný termín sa nenašiel. Skontrolujte meno, telefón a dátum.";
+      
+      if (similarEvents.length > 0) {
+        const suggestions = similarEvents.map(event => {
+          const time = dayjs(event.start.dateTime).tz(config.calendar.timeZone).format('HH:mm');
+          const patientMatch = (event.description || '').match(/Pacient:\s*([^\n]+)/);
+          const patient = patientMatch ? patientMatch[1] : 'Neznámy pacient';
+          return `${time} - ${patient}`;
+        }).slice(0, 3);
+        
+        errorMessage += ` Možno ste mysleli: ${suggestions.join(', ')}.`;
+      }
+      
       return {
         success: false,
-        error: "Pôvodný termín sa nenašiel. Skontrolujte meno, telefón a dátum."
+        error: errorMessage
       };
     }
     
@@ -481,13 +506,18 @@ async function handleRescheduleAppointment(parameters) {
     // Delete old appointment
     await googleCalendar.deleteEvent(existingEvent.id);
     
+    // Extract full patient name from original event (preserve full name format)
+    const originalDescription = existingEvent.description || '';
+    const originalPatientMatch = originalDescription.match(/Pacient:\s*([^\n]+)/);
+    const fullOriginalName = originalPatientMatch ? originalPatientMatch[1].trim() : patientName;
+    
     // Create new appointment
     const typeConfig = config.appointmentTypes[appointmentType];
     const newOrderNumber = await googleCalendar.getOrderNumber(appointmentType, dayjs(finalNewDateTime).format('YYYY-MM-DD'));
     
     const eventData = {
       appointmentType: appointmentType,
-      patientName: patientName,
+      patientName: fullOriginalName, // Use full name from original event
       phone: phone,
       insurance: 'Existing patient', // Preserve from original
       dateTime: finalNewDateTime,

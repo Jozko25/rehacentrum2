@@ -258,13 +258,32 @@ class GoogleCalendarService {
   async findEventByPatient(patientName, phone, appointmentDate) {
     const events = await this.getEventsForDay(appointmentDate);
     
-    return events.find(event => {
-      const summary = event.summary || '';
+    // Clean phone number for comparison (remove spaces, dashes, etc)
+    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+    
+    // First priority: Exact phone match (most reliable)
+    let exactMatch = events.find(event => {
       const description = event.description || '';
+      const eventPhone = description.match(/Telefón:\s*([^\n]+)/)?.[1]?.replace(/[\s\-\(\)]/g, '') || '';
+      return eventPhone === cleanPhone;
+    });
+    
+    if (exactMatch) return exactMatch;
+    
+    // Second priority: Fuzzy name matching
+    const nameParts = patientName.toLowerCase().trim().split(/\s+/);
+    
+    return events.find(event => {
+      const summary = (event.summary || '').toLowerCase();
+      const description = (event.description || '').toLowerCase();
+      const fullText = summary + ' ' + description;
       
-      return summary.includes(patientName) || 
-             description.includes(patientName) || 
-             description.includes(phone);
+      // Check if at least 60% of name parts match
+      const matchedParts = nameParts.filter(part => 
+        part.length > 1 && fullText.includes(part)
+      );
+      
+      return matchedParts.length >= Math.ceil(nameParts.length * 0.6);
     });
   }
 
