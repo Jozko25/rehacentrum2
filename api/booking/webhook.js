@@ -450,7 +450,17 @@ async function handleRescheduleAppointment(parameters) {
     if (!existingEvent) {
       // Try to find similar appointments for better error message
       const allEvents = await googleCalendar.getEventsForDay(old_date);
-      const similarEvents = allEvents.filter(event => {
+      const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+      
+      // First check for phone matches
+      const phoneMatches = allEvents.filter(event => {
+        const description = event.description || '';
+        const eventPhone = description.match(/Telefón:\s*([^\n]+)/)?.[1]?.replace(/[\s\-\(\)]/g, '') || '';
+        return eventPhone.includes(cleanPhone.slice(-6)); // Last 6 digits
+      });
+      
+      // Then check for name matches
+      const nameMatches = allEvents.filter(event => {
         const description = (event.description || '').toLowerCase();
         const summary = (event.summary || '').toLowerCase();
         const nameParts = patientName.toLowerCase().split(/\s+/);
@@ -460,17 +470,20 @@ async function handleRescheduleAppointment(parameters) {
         );
       });
       
-      let errorMessage = "Pôvodný termín sa nenašiel. Skontrolujte meno, telefón a dátum.";
+      let errorMessage = "Pôvodný termín sa nenašiel.";
       
-      if (similarEvents.length > 0) {
-        const suggestions = similarEvents.map(event => {
-          const time = dayjs(event.start.dateTime).tz(config.calendar.timeZone).format('HH:mm');
-          const patientMatch = (event.description || '').match(/Pacient:\s*([^\n]+)/);
-          const patient = patientMatch ? patientMatch[1] : 'Neznámy pacient';
-          return `${time} - ${patient}`;
-        }).slice(0, 3);
-        
-        errorMessage += ` Možno ste mysleli: ${suggestions.join(', ')}.`;
+      if (phoneMatches.length > 0) {
+        errorMessage += " Skontrolujte presný formát telefónneho čísla.";
+      } else if (nameMatches.length > 1) {
+        errorMessage += ` Našiel som ${nameMatches.length} termínov s podobným menom. Pre presné vyhľadanie potrebujem správne telefónne číslo.`;
+      } else if (nameMatches.length === 1) {
+        const event = nameMatches[0];
+        const time = dayjs(event.start.dateTime).tz(config.calendar.timeZone).format('HH:mm');
+        const patientMatch = (event.description || '').match(/Pacient:\s*([^\n]+)/);
+        const patient = patientMatch ? patientMatch[1] : 'Neznámy pacient';
+        errorMessage += ` Možno ste mysleli: ${time} - ${patient}. Skontrolujte telefónne číslo.`;
+      } else {
+        errorMessage += " Skontrolujte meno, telefón a dátum.";
       }
       
       return {

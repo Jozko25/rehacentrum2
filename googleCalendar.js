@@ -262,29 +262,55 @@ class GoogleCalendarService {
     const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
     
     // First priority: Exact phone match (most reliable)
-    let exactMatch = events.find(event => {
+    let exactPhoneMatch = events.find(event => {
       const description = event.description || '';
       const eventPhone = description.match(/Telefón:\s*([^\n]+)/)?.[1]?.replace(/[\s\-\(\)]/g, '') || '';
       return eventPhone === cleanPhone;
     });
     
-    if (exactMatch) return exactMatch;
+    if (exactPhoneMatch) return exactPhoneMatch;
     
-    // Second priority: Fuzzy name matching
+    // Second priority: Partial phone match (last 6 digits - handles country code differences)
+    if (cleanPhone.length >= 6) {
+      const lastSixDigits = cleanPhone.slice(-6);
+      let partialPhoneMatch = events.find(event => {
+        const description = event.description || '';
+        const eventPhone = description.match(/Telefón:\s*([^\n]+)/)?.[1]?.replace(/[\s\-\(\)]/g, '') || '';
+        return eventPhone.endsWith(lastSixDigits);
+      });
+      
+      if (partialPhoneMatch) return partialPhoneMatch;
+    }
+    
+    // Third priority: Name matching, but only if it's quite specific
     const nameParts = patientName.toLowerCase().trim().split(/\s+/);
     
-    return events.find(event => {
+    // Only proceed with name matching if we have a surname or specific enough name
+    if (nameParts.length < 2 && nameParts[0].length < 4) {
+      return null; // Too generic (like just "Ján")
+    }
+    
+    const nameMatches = events.filter(event => {
       const summary = (event.summary || '').toLowerCase();
       const description = (event.description || '').toLowerCase();
       const fullText = summary + ' ' + description;
       
-      // Check if at least 60% of name parts match
+      // For multiple name parts, require higher match rate
+      let requiredMatchRate = nameParts.length >= 2 ? 0.8 : 1.0;
+      
       const matchedParts = nameParts.filter(part => 
         part.length > 1 && fullText.includes(part)
       );
       
-      return matchedParts.length >= Math.ceil(nameParts.length * 0.6);
+      return matchedParts.length >= Math.ceil(nameParts.length * requiredMatchRate);
     });
+    
+    // If multiple name matches, return null to force phone-based search
+    if (nameMatches.length > 1) {
+      return null;
+    }
+    
+    return nameMatches.length === 1 ? nameMatches[0] : null;
   }
 
   formatEventDescription(eventData) {
