@@ -283,10 +283,23 @@ async function handleBookAppointment(parameters) {
   }
 
   try {
+    // PHONE VALIDATION: Format and validate phone number
+    const phoneValidator = require('../../utils/phoneValidator');
+    const phoneValidation = phoneValidator.validatePhoneNumber(phone);
+    
+    if (!phoneValidation.isValid) {
+      return {
+        success: false,
+        message: phoneValidation.error
+      };
+    }
+    
+    const formattedPhone = phoneValidation.formatted;
+
     const patientData = {
       name: patient_name,
       surname: patient_surname,
-      phone: phone,
+      phone: formattedPhone, // Use formatted phone
       insurance: insurance
     };
 
@@ -385,8 +398,21 @@ async function handleCancelAppointment(parameters) {
   }
 
   try {
-    // Find the appointment
-    const event = await googleCalendar.findEventByPatient(patientName, phone, appointment_date);
+    // PHONE VALIDATION: Format and validate phone number
+    const phoneValidator = require('../../utils/phoneValidator');
+    const phoneValidation = phoneValidator.validatePhoneNumber(phone);
+    
+    if (!phoneValidation.isValid) {
+      return {
+        success: false,
+        message: phoneValidation.error
+      };
+    }
+    
+    const formattedPhone = phoneValidation.formatted;
+
+    // Find the appointment using formatted phone
+    const event = await googleCalendar.findEventByPatient(patientName, formattedPhone, appointment_date);
     
     if (!event) {
       return {
@@ -444,6 +470,19 @@ async function handleRescheduleAppointment(parameters) {
   }
 
   try {
+    // PHONE VALIDATION: Format and validate phone number
+    const phoneValidator = require('../../utils/phoneValidator');
+    const phoneValidation = phoneValidator.validatePhoneNumber(phone);
+    
+    if (!phoneValidation.isValid) {
+      return {
+        success: false,
+        error: phoneValidation.error
+      };
+    }
+    
+    const formattedPhone = phoneValidation.formatted;
+
     // SECURITY: Reject generic single names immediately
     const nameParts = patientName.trim().split(/\s+/);
     if (nameParts.length === 1 && nameParts[0].length <= 4) {
@@ -453,19 +492,26 @@ async function handleRescheduleAppointment(parameters) {
       };
     }
 
-    // Find the existing appointment
-    const existingEvent = await googleCalendar.findEventByPatient(patientName, phone, old_date);
+    // Find the existing appointment using formatted phone
+    const existingEvent = await googleCalendar.findEventByPatient(patientName, formattedPhone, old_date);
     
     if (!existingEvent) {
       // SECURITY: NO NAME FALLBACK MATCHING - only phone-based hints
       const allEvents = await googleCalendar.getEventsForDay(old_date);
-      const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
       
-      // Only check for phone matches - NO name-based suggestions
+      // Only check for phone matches using formatted phone - NO name-based suggestions
       const phoneMatches = allEvents.filter(event => {
         const description = event.description || '';
-        const eventPhone = description.match(/Telefón:\s*([^\n]+)/)?.[1]?.replace(/[\s\-\(\)]/g, '') || '';
-        return eventPhone.includes(cleanPhone.slice(-6)); // Last 6 digits
+        const eventPhoneMatch = description.match(/Telefón:\s*([^\n]+)/)?.[1];
+        
+        if (!eventPhoneMatch) return false;
+        
+        // Format both phones for comparison
+        const eventPhoneFormatted = phoneValidator.formatPhoneNumber(eventPhoneMatch);
+        
+        // Check exact match or partial match (last 6 digits)
+        return eventPhoneFormatted === formattedPhone || 
+               (eventPhoneFormatted && phoneValidator.getLastDigits(eventPhoneFormatted, 6) === phoneValidator.getLastDigits(formattedPhone, 6));
       });
       
       let errorMessage = "Pôvodný termín sa nenašiel.";
