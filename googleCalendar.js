@@ -330,7 +330,7 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
         if (!occupiedTimes.has(timeSlot)) {
           availableSlots.push({
             time: timeSlot,
-            datetime: currentTime.format(), // Use local timezone format instead of UTC
+            datetime: currentTime.format(), // Use local timezone format with DST awareness
             available: true
           });
         }
