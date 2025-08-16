@@ -319,10 +319,9 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
 
     typeConfig.schedule.forEach(schedule => {
       console.log(`🕐 Processing schedule: ${schedule.start}-${schedule.end} for ${appointmentType}`);
-      let currentTime = dayjs(`${date} ${schedule.start}`, 'YYYY-MM-DD HH:mm')
-        .tz(config.calendar.timeZone);
-      const endTime = dayjs(`${date} ${schedule.end}`, 'YYYY-MM-DD HH:mm')
-        .tz(config.calendar.timeZone);
+      // Create times in local timezone without conversion
+      let currentTime = dayjs(`${date} ${schedule.start}`, 'YYYY-MM-DD HH:mm', config.calendar.timeZone);
+      const endTime = dayjs(`${date} ${schedule.end}`, 'YYYY-MM-DD HH:mm', config.calendar.timeZone);
       console.log(`🕐 Start time: ${currentTime.format('HH:mm')}, End time: ${endTime.format('HH:mm')}`);
 
       while (currentTime.isBefore(endTime)) {
