@@ -102,10 +102,11 @@ class GoogleCalendarService {
       const typeConfig = config.appointmentTypes[eventData.appointmentType];
       const appointmentName = typeConfig ? typeConfig.name : eventData.appointmentType;
       
-      const startDateTime = dayjs(eventData.dateTime, undefined, config.calendar.timeZone).format();
-      const endDateTime = dayjs(eventData.dateTime, undefined, config.calendar.timeZone)
+      // Manual timezone handling to ensure correct calendar time
+      const startDateTime = eventData.dateTime + '+02:00';
+      const endDateTime = dayjs(eventData.dateTime)
         .add(eventData.duration || 30, 'minute')
-        .format();
+        .format() + '+02:00';
       
       console.log(`🕐 Creating calendar event:`);
       console.log(`   Input dateTime: ${eventData.dateTime}`);

@@ -316,6 +316,15 @@ async function handleBookAppointment(parameters) {
       };
     }
     
+    // Final check to prevent duplicates
+    const finalAvailabilityCheck = await appointmentValidator.validateSlotAvailability(date_time, appointment_type);
+    if (!finalAvailabilityCheck.isValid) {
+      return {
+        success: false,
+        message: "Termín už nie je dostupný. Niekto iný ho medzitým rezervoval."
+      };
+    }
+    
     // Get order number
     const date = dayjs(date_time).format('YYYY-MM-DD');
     const orderNumber = await googleCalendar.getOrderNumber(appointment_type, date);
