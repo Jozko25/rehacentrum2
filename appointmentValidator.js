@@ -123,8 +123,9 @@ class AppointmentValidator {
       };
     }
     
-    // Check if time is within allowed schedule
-    const appointmentTime = appointmentDate.format('HH:mm');
+    // Extract time from the datetime string, ignoring timezone conversion
+    const appointmentTime = dayjs(dateTime).format('HH:mm');
+    console.log(`🕐 Extracted time for validation: ${appointmentTime} from ${dateTime}`);
     const isValidTime = typeConfig.schedule.some(schedule => {
       const startTime = dayjs(`2000-01-01 ${schedule.start}`);
       const endTime = dayjs(`2000-01-01 ${schedule.end}`);
