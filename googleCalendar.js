@@ -106,7 +106,7 @@ class GoogleCalendarService {
       const startDateTime = eventData.dateTime + '+02:00';
       const endDateTime = dayjs(eventData.dateTime)
         .add(eventData.duration || 30, 'minute')
-        .format() + '+02:00';
+        .format('YYYY-MM-DDTHH:mm:ss') + '+02:00';
       
       console.log(`🕐 Creating calendar event:`);
       console.log(`   Input dateTime: ${eventData.dateTime}`);
