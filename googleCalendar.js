@@ -68,7 +68,7 @@ class GoogleCalendarService {
       this.calendar = google.calendar({ version: 'v3', auth: authClient });
       this.initialized = true;
       
-      console.log('✅ Google Calendar service initialized successfully');
+      console.log('✅ Google Calendar service initialized successfully - timezone fix active');
       
       // Test the connection with a simple API call
       console.log('🧪 Testing calendar connection...');
@@ -318,10 +318,12 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
     });
 
     typeConfig.schedule.forEach(schedule => {
+      console.log(`🕐 Processing schedule: ${schedule.start}-${schedule.end} for ${appointmentType}`);
       let currentTime = dayjs(`${date} ${schedule.start}`, 'YYYY-MM-DD HH:mm')
         .tz(config.calendar.timeZone);
       const endTime = dayjs(`${date} ${schedule.end}`, 'YYYY-MM-DD HH:mm')
         .tz(config.calendar.timeZone);
+      console.log(`🕐 Start time: ${currentTime.format('HH:mm')}, End time: ${endTime.format('HH:mm')}`);
 
       while (currentTime.isBefore(endTime)) {
         const timeSlot = currentTime.format('HH:mm');
