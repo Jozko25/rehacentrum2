@@ -1,6 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const dayjs = require('dayjs');
+
+// Force rebuild trigger to ensure timezone fix is deployed
+require('./force-rebuild');
 const utc = require('dayjs/plugin/utc');
 const timezone = require('dayjs/plugin/timezone');
 
