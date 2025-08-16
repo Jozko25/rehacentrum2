@@ -61,10 +61,37 @@
           "required": false
         },
         {
-          "id": "patient_data",
+          "id": "patient_name",
           "type": "string",
           "value_type": "llm_prompt",
-          "description": "JSON string s údajmi pacienta pre rezerváciu: {\"meno\": \"Ján\", \"priezvisko\": \"Novák\", \"telefon\": \"+421900123456\", \"poistovna\": \"VšZP\"}",
+          "description": "Meno pacienta (iba krstné meno)",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
+        },
+        {
+          "id": "patient_surname",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Priezvisko pacienta",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
+        },
+        {
+          "id": "insurance",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Názov poisťovne pacienta",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
+        },
+        {
+          "id": "date_time",
+          "type": "string",
+          "value_type": "llm_prompt",
+          "description": "Dátum a čas v ISO formáte YYYY-MM-DDTHH:mm:ss pre rezerváciu",
           "dynamic_variable": "",
           "constant_value": "",
           "required": false
