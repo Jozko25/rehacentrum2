@@ -62,9 +62,9 @@ async function handleGetMoreSlots(parameters) {
     }
 
     const slotTimes = slotsToShow.map(slot => slot.time).join(', ');
-    const priceInfo = typeConfig.price === 0 ? 'hradí poisťovňa' : `${typeConfig.price}€`;
+
     
-    let message = `Na ${dayName} ${formattedDate} sú dostupné tieto termíny pre ${typeConfig.name}: ${slotTimes}. Cena: ${priceInfo}.`;
+    let message = `Na ${dayName} ${formattedDate} sú dostupné tieto termíny pre ${typeConfig.name}: ${slotTimes}.`;
     
     // Add hint if there are more slots available
     if (availableSlots.length > slotsToShow.length) {
@@ -174,9 +174,9 @@ async function handleGetAvailableSlots(parameters) {
     }
 
     const slotTimes = slotsToShow.map(slot => slot.time).join(', ');
-    const priceInfo = typeConfig.price === 0 ? 'hradí poisťovňa' : `${typeConfig.price}€`;
+
     
-    let message = `Na ${dayName} ${formattedDate} sú dostupné tieto termíny pre ${typeConfig.name}: ${slotTimes}. Cena: ${priceInfo}.`;
+    let message = `Na ${dayName} ${formattedDate} sú dostupné tieto termíny pre ${typeConfig.name}: ${slotTimes}.`;
     
     // Add hint if there are more slots available
     if (availableSlots.length > slotsToShow.length) {
@@ -242,14 +242,14 @@ async function handleFindClosestSlot(parameters) {
     
     if (foundSlot) {
       const formattedDate = dayjs(foundSlot.date).format('DD.MM.YYYY');
-      const priceInfo = foundSlot.price === '0€' ? 'hradí poisťovňa' : foundSlot.price;
+
       const dayPrefix = foundSlot.days_from_preferred === 0 ? 'dnes' : 
                        foundSlot.days_from_preferred === 1 ? 'zajtra' : 
                        `za ${foundSlot.days_from_preferred} dní`;
       
       return {
         success: true,
-        message: `Najbližší voľný termín pre ${foundSlot.appointment_type} je ${dayPrefix} (${foundSlot.day_name} ${formattedDate}) o ${foundSlot.time}. Cena: ${priceInfo}.`
+        message: `Najbližší voľný termín pre ${foundSlot.appointment_type} je ${dayPrefix} (${foundSlot.day_name} ${formattedDate}) o ${foundSlot.time}.`
       };
     } else {
       return {
@@ -350,11 +350,11 @@ async function handleBookAppointment(parameters) {
     const formattedDate = dayjs(date_time).format('DD.MM.YYYY');
     const formattedTime = dayjs(date_time).format('HH:mm');
     const dayName = dayjs(date_time).format('dddd');
-    const priceInfo = typeConfig.price === 0 ? 'hradí poisťovňa' : `${typeConfig.price}€`;
+
     
     return {
       success: true,
-      message: `Termín bol úspešne rezervovaný. ${patient_name} ${patient_surname} má objednaný ${typeConfig.name} na ${dayName} ${formattedDate} o ${formattedTime}. Poradové číslo: ${orderNumber}. Cena: ${priceInfo}. ${smsResult?.success ? 'SMS potvrdenie bolo odoslané.' : ''}`
+      message: `Termín bol úspešne rezervovaný. ${patient_name} ${patient_surname} má objednaný ${typeConfig.name} na ${dayName} ${formattedDate} o ${formattedTime}. Poradové číslo: ${orderNumber}. ${smsResult?.success ? 'SMS potvrdenie bolo odoslané.' : ''}`
     };
   } catch (error) {
     return {
@@ -365,9 +365,10 @@ async function handleBookAppointment(parameters) {
 }
 
 async function handleCancelAppointment(parameters) {
-  const { patient_name, phone, appointment_date } = parameters;
+  const { patient_name, full_patient_name, phone, appointment_date } = parameters;
+  const patientName = patient_name || full_patient_name;
   
-  if (!patient_name || !phone || !appointment_date) {
+  if (!patientName || !phone || !appointment_date) {
     return {
       success: false,
       message: "Na zrušenie termínu potrebujem meno pacienta, telefónne číslo a dátum termínu."
@@ -376,7 +377,7 @@ async function handleCancelAppointment(parameters) {
 
   try {
     // Find the appointment
-    const event = await googleCalendar.findEventByPatient(patient_name, phone, appointment_date);
+    const event = await googleCalendar.findEventByPatient(patientName, phone, appointment_date);
     
     if (!event) {
       return {
@@ -417,9 +418,10 @@ async function handleCancelAppointment(parameters) {
 }
 
 async function handleRescheduleAppointment(parameters) {
-  const { patient_name, phone, old_date, new_date_time } = parameters;
+  const { patient_name, full_patient_name, phone, old_date, new_date_time } = parameters;
+  const patientName = patient_name || full_patient_name;
   
-  if (!patient_name || !phone || !old_date || !new_date_time) {
+  if (!patientName || !phone || !old_date || !new_date_time) {
     return {
       success: false,
       message: "Na presunutie termínu potrebujem meno pacienta, telefónne číslo, pôvodný dátum a nový dátum s časom."
@@ -428,7 +430,7 @@ async function handleRescheduleAppointment(parameters) {
 
   try {
     // Find the existing appointment
-    const existingEvent = await googleCalendar.findEventByPatient(patient_name, phone, old_date);
+    const existingEvent = await googleCalendar.findEventByPatient(patientName, phone, old_date);
     
     if (!existingEvent) {
       return {
@@ -469,7 +471,7 @@ async function handleRescheduleAppointment(parameters) {
     
     const eventData = {
       appointmentType: appointmentType,
-      patientName: patient_name,
+      patientName: patientName,
       phone: phone,
       insurance: 'Existing patient', // Preserve from original
       dateTime: new_date_time,
@@ -490,7 +492,7 @@ async function handleRescheduleAppointment(parameters) {
       };
       
       const newAppointment = {
-        patientName: patient_name,
+        patientName: patientName,
         phone: phone,
         date: dayjs(new_date_time).format('DD.MM.YYYY'),
         time: dayjs(new_date_time).format('HH:mm'),

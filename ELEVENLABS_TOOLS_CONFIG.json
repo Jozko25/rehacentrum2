@@ -106,7 +106,7 @@
           "required": false
         },
         {
-          "id": "patient_name",
+          "id": "full_patient_name",
           "type": "string",
           "value_type": "llm_prompt",
           "description": "Celé meno pacienta pre zrušenie/presunutie",
@@ -145,10 +145,19 @@
           "id": "action",
           "type": "string",
           "value_type": "llm_prompt",
-          "description": "Typ akcie: get_available_slots, find_closest_slot, book_appointment, cancel_appointment, reschedule_appointment",
+          "description": "Typ akcie: get_available_slots, find_closest_slot, book_appointment, cancel_appointment, reschedule_appointment, get_more_slots",
           "dynamic_variable": "",
           "constant_value": "",
           "required": true
+        },
+        {
+          "id": "current_count",
+          "type": "number",
+          "value_type": "llm_prompt",
+          "description": "Počet už zobrazených termínov pre get_more_slots akciu",
+          "dynamic_variable": "",
+          "constant_value": "",
+          "required": false
         }
       ],
       "required": false,
