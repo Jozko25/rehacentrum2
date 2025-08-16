@@ -444,7 +444,7 @@ async function handleRescheduleAppointment(parameters) {
     if (!existingEvent) {
       return {
         success: false,
-        error: "Pôvodný termín sa nenašiel"
+        error: `Pôvodný termín sa nenašiel pre meno: "${patientName}", telefón: "${phone}", dátum: "${old_date}"`
       };
     }
     
@@ -458,7 +458,7 @@ async function handleRescheduleAppointment(parameters) {
     if (!appointmentType) {
       return {
         success: false,
-        error: "Nepodarilo sa určiť typ termínu"
+        error: `Nepodarilo sa určiť typ termínu. Summary: "${summary}". Available types: ${Object.keys(config.appointmentTypes).map(t => config.appointmentTypes[t].name).join(', ')}`
       };
     }
     
