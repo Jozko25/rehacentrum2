@@ -450,9 +450,10 @@ async function handleRescheduleAppointment(parameters) {
     
     // Extract appointment type from existing event
     const summary = existingEvent.summary || '';
-    const appointmentType = Object.keys(config.appointmentTypes).find(type => 
-      summary.includes(type.toUpperCase())
-    );
+    const appointmentType = Object.keys(config.appointmentTypes).find(type => {
+      const typeName = config.appointmentTypes[type].name;
+      return summary.includes(typeName);
+    });
     
     if (!appointmentType) {
       return {
