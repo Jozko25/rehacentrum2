@@ -1,6 +1,6 @@
 {
   "name": "rehacentrum-api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Rehacentrum Humenné - Healthcare appointment booking system with AI voice assistant integration",
   "main": "server.js",
   "scripts": {
