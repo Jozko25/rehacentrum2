@@ -106,13 +106,12 @@ class GoogleCalendarService {
         summary: `${appointmentName} - ${eventData.patientName}`,
         description: this.formatEventDescription(eventData),
         start: {
-          dateTime: dayjs(eventData.dateTime).tz(config.calendar.timeZone).format(),
+          dateTime: dayjs(eventData.dateTime, undefined, config.calendar.timeZone).format(),
           timeZone: config.calendar.timeZone
         },
         end: {
-          dateTime: dayjs(eventData.dateTime)
+          dateTime: dayjs(eventData.dateTime, undefined, config.calendar.timeZone)
             .add(eventData.duration || 30, 'minute')
-            .tz(config.calendar.timeZone)
             .format(),
           timeZone: config.calendar.timeZone
         },

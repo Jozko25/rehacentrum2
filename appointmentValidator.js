@@ -64,9 +64,8 @@ class AppointmentValidator {
   }
   
   async validateDateTime(dateTime, appointmentType) {
-    // Parse the datetime and extract just the time for validation
+    // Parse the datetime and extract just the time for validation  
     const appointmentDate = dayjs(dateTime);
-    console.log(`🕐 Validating datetime: ${dateTime} -> extracted time: ${appointmentDate.format('HH:mm')}`);
     const now = dayjs().tz(config.calendar.timeZone);
     const typeConfig = config.appointmentTypes[appointmentType];
     
@@ -125,7 +124,6 @@ class AppointmentValidator {
     
     // Extract time from the datetime string, ignoring timezone conversion
     const appointmentTime = dayjs(dateTime).format('HH:mm');
-    console.log(`🕐 Extracted time for validation: ${appointmentTime} from ${dateTime}`);
     const isValidTime = typeConfig.schedule.some(schedule => {
       const startTime = dayjs(`2000-01-01 ${schedule.start}`);
       const endTime = dayjs(`2000-01-01 ${schedule.end}`);
