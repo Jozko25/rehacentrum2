@@ -575,9 +575,19 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { action, parameters } = req.body;
+    // Handle both old format {action, parameters} and new format with action in body
+    let action, parameters;
     
-    if (!action) {
+    if (req.body.action && req.body.parameters) {
+      // Old format
+      action = req.body.action;
+      parameters = req.body.parameters;
+    } else if (req.body.action) {
+      // New format - action is in body, other fields are parameters
+      action = req.body.action;
+      parameters = { ...req.body };
+      delete parameters.action;
+    } else {
       const errorMessage = 'Došla k chybe';
       const errorResponse = {
         error: 'Missing action parameter',
