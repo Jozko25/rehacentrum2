@@ -37,8 +37,8 @@ const config = {
         'Sports clothes and towel',
         'Cash payment required (130€)'
       ],
-      orderNumbers: true,
-      smsTemplate: 'Dobrý deň {patient_name}, Váš termín bol rezervovaný na {date_short} o {time}, cena 130€, nalačno, prineste jedlo/vodu, veci na prezlečenie. Vaše poradové číslo je {order_number}. Rehacentrum Humenné'
+      orderNumbers: false,
+      smsTemplate: 'Dobrý deň {patient_name}, Váš termín bol rezervovaný na {date_short} o {time}, cena 130€, nalačno, prineste jedlo/vodu, veci na prezlečenie. Rehacentrum Humenné'
     },
     
     vstupne_vysetrenie: {

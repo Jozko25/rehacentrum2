@@ -374,9 +374,27 @@ async function handleBookAppointment(parameters) {
     const dayName = dayjs(date_time).format('dddd');
 
     
+    // Create success message
+    let successMessage = `Termín bol úspešne rezervovaný. ${patient_name} ${patient_surname} má objednaný ${typeConfig.name} na ${dayName} ${formattedDate} o ${formattedTime}.`;
+    
+    // Add order number only if enabled for this appointment type
+    if (typeConfig.orderNumbers && orderNumber) {
+      successMessage += ` Poradové číslo: ${orderNumber}.`;
+    }
+    
+    // Add price and requirements for paid appointments
+    if (typeConfig.price > 0) {
+      successMessage += ` Cena: ${typeConfig.price}€. DÔLEŽITÉ: Prísť nalačno (8 hodín), prineste si jedlo a vodu po vyšetrení, športové oblečenie a uterák.`;
+    }
+    
+    // Add SMS confirmation
+    if (smsResult?.success) {
+      successMessage += ' SMS potvrdenie bolo odoslané.';
+    }
+    
     return {
       success: true,
-      message: `Termín bol úspešne rezervovaný. ${patient_name} ${patient_surname} má objednaný ${typeConfig.name} na ${dayName} ${formattedDate} o ${formattedTime}. Poradové číslo: ${orderNumber}. ${smsResult?.success ? 'SMS potvrdenie bolo odoslané.' : ''}`
+      message: successMessage
     };
   } catch (error) {
     return {
