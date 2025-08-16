@@ -303,6 +303,13 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
       throw new Error(`Invalid appointment type: ${appointmentType}`);
     }
 
+    // Check if it's a working day first
+    const holidayService = require('./holidayService');
+    const isWorking = await holidayService.isWorkingDay(date);
+    if (!isWorking) {
+      return []; // Return no slots for non-working days
+    }
+
     const events = await this.getEventsForDay(date);
     const typeEvents = events.filter(event => 
       event.summary && event.summary.includes(appointmentType.toUpperCase())
