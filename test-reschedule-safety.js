@@ -11,10 +11,10 @@ const criticalTests = [
       patient_name: "Ján Harmady",
       phone: "+421910223761",
       old_date: "2025-08-19",
-      new_date: "2025-08-20", 
+      new_date: "2025-08-21", 
       new_time: "09:00"
     },
-    expectation: "Should find Ján Harmady's 08:00 appointment"
+    expectation: "Should find Ján Harmady's 08:00 vstupne_vysetrenie appointment"
   },
   {
     name: "❌ UNSAFE: Generic 'Ján' with wrong phone",
@@ -23,8 +23,8 @@ const criticalTests = [
       patient_name: "Ján",
       phone: "+421999999999",
       old_date: "2025-08-19",
-      new_date: "2025-08-20",
-      new_time: "09:00"
+      new_date: "2025-08-21",
+      new_time: "09:10"
     },
     expectation: "Should FAIL - don't match any Ján"
   },
@@ -35,10 +35,10 @@ const criticalTests = [
       patient_name: "Peter Novotný", 
       phone: "+421905444444",
       old_date: "2025-08-19",
-      new_date: "2025-08-20",
-      new_time: "08:00"
+      new_date: "2025-08-21",
+      new_time: "07:00"
     },
-    expectation: "Should find first Peter (07:00), not second Peter (09:00)"
+    expectation: "Should find first Peter (07:00 sportova_prehliadka), not second Peter (09:00)"
   },
   {
     name: "❌ UNSAFE: Mixed patient info",
@@ -47,8 +47,8 @@ const criticalTests = [
       patient_name: "Ján Novák",  // First Ján's name
       phone: "+421910223761",     // Second Ján's phone
       old_date: "2025-08-19", 
-      new_date: "2025-08-20",
-      new_time: "09:00"
+      new_date: "2025-08-21",
+      new_time: "09:10"
     },
     expectation: "Should match by PHONE (Ján Harmady), not by name"
   },
@@ -59,8 +59,8 @@ const criticalTests = [
       patient_name: "Mária Kováčová",
       phone: "+421910666666",  // Original was 0910666666
       old_date: "2025-08-19",
-      new_date: "2025-08-20", 
-      new_time: "10:00"
+      new_date: "2025-08-21", 
+      new_time: "09:10"
     },
     expectation: "Should find Mária despite phone format difference"
   }
