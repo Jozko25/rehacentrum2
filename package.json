@@ -4,7 +4,7 @@
   "description": "Rehacentrum Humenné - Healthcare appointment booking system with AI voice assistant integration",
   "main": "server.js",
   "scripts": {
-    "start": "node minimal-test.js",
+    "start": "node server.js",
     "dev": "node server.js",
     "build": "echo 'Build complete'",
     "vercel-build": "echo 'Build complete'"
