@@ -264,7 +264,7 @@ app.get('/admin', checkIPWhitelist, (req, res) => {
   }
   
   // Serve login page
-  res.sendFile('/Users/janharmady/Desktop/rehacentrum2/public/admin-login.html');
+  res.sendFile('admin-login.html', { root: './public' });
 });
 
 // Admin Login API
