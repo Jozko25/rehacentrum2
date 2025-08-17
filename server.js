@@ -117,12 +117,19 @@ app.use((req, res, next) => {
 // Initialize services
 async function initializeServices() {
   try {
-    await googleCalendar.initialize();
+    // Initialize Google Calendar only if not skipped
+    if (process.env.SKIP_GOOGLE_CALENDAR !== 'true') {
+      await googleCalendar.initialize();
+    } else {
+      addLog('warning', 'Google Calendar service skipped (SKIP_GOOGLE_CALENDAR=true)');
+    }
+    
     await smsService.initialize();
     await platformManager.initialize();
     addLog('success', 'All services initialized successfully');
   } catch (error) {
     addLog('error', 'Failed to initialize services', error.message);
+    // Don't throw - let the app continue without all services
   }
 }
 
@@ -140,8 +147,8 @@ app.get('/debug-env', (req, res) => {
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
-  // Ensure services are initialized for health check
-  if (!googleCalendar.initialized) {
+  // Ensure services are initialized for health check (only if not skipped)
+  if (!googleCalendar.initialized && process.env.SKIP_GOOGLE_CALENDAR !== 'true') {
     try {
       await googleCalendar.initialize();
     } catch (error) {
@@ -1512,7 +1519,12 @@ app.use((req, res) => {
 
 // Start server
 async function startServer() {
-  await initializeServices();
+  try {
+    await initializeServices();
+  } catch (error) {
+    console.error('Service initialization failed, but starting server anyway:', error.message);
+    addLog('warning', 'Service initialization failed, but server starting anyway');
+  }
   
   app.listen(PORT, '0.0.0.0', () => {
     addLog('success', `Rehacentrum API server started on port ${PORT}`);

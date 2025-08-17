@@ -6,7 +6,7 @@ const config = {
   
   // Google Calendar Configuration
   calendar: {
-    credentials: path.join(__dirname, 'credentials.json'),
+    credentials: path.join(__dirname, 'credentials.json'), // Fallback path
     calendarId: '1rehacentrum@gmail.com',
     timeZone: 'Europe/Bratislava'
   },
