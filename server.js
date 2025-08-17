@@ -1514,10 +1514,10 @@ app.use((req, res) => {
 async function startServer() {
   await initializeServices();
   
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     addLog('success', `Rehacentrum API server started on port ${PORT}`);
-    console.log(`🏥 Rehacentrum API running at http://localhost:${PORT}`);
-    console.log(`📊 Dashboard available at http://localhost:${PORT}`);
+    console.log(`🏥 Rehacentrum API running at http://0.0.0.0:${PORT}`);
+    console.log(`📊 Dashboard available at http://0.0.0.0:${PORT}`);
   });
 }
 

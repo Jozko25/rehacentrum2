@@ -18,10 +18,20 @@ class GoogleCalendarService {
     try {
       console.log('🔧 Initializing Google Calendar service...');
       
-      // Try environment variables first (for production)
+      // Try Railway build command file first (most reliable)
       let credentials;
-      if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
-        console.log('📝 Using GOOGLE_APPLICATION_CREDENTIALS_JSON from environment (Railway recommended)');
+      if (process.env.GOOGLE_APPLICATION_CREDENTIALS && require('fs').existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
+        console.log('📁 Using GOOGLE_APPLICATION_CREDENTIALS file from Railway build command');
+        try {
+          credentials = require(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+          console.log('✅ Successfully loaded credentials from Railway build file');
+          console.log('🔑 Credential keys:', Object.keys(credentials));
+        } catch (fileError) {
+          console.error('❌ Failed to load credentials from file:', fileError);
+          throw fileError;
+        }
+      } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+        console.log('📝 Using GOOGLE_APPLICATION_CREDENTIALS_JSON from environment (fallback)');
         try {
           credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
           console.log('✅ Successfully parsed GOOGLE_APPLICATION_CREDENTIALS_JSON');
