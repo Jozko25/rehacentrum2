@@ -89,7 +89,7 @@ const config = {
         { start: '09:00', end: '11:30', interval: 10 },
         { start: '13:00', end: '15:00', interval: 10 }
       ],
-      dailyLimit: 10,
+      dailyLimit: 1,
       duration: 30,
       price: 0,
       currency: 'EUR',
