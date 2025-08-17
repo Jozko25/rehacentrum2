@@ -159,7 +159,7 @@ app.get('/health', async (req, res) => {
     status: 'OK',
     message: 'Rehacentrum API je v prevádzke',
     timestamp: dayjs().tz(config.calendar.timeZone).format(),
-    version: '1.0.5', // Security hardening deployed
+    version: '1.0.6', // Global time-based order numbers
     services: {
       calendar: googleCalendar.initialized,
       sms: smsService.getStatus()
@@ -1228,7 +1228,7 @@ app.post('/api/appointments', async (req, res) => {
     
     // Get order number
     const date = dayjs(dateTime).format('YYYY-MM-DD');
-    const orderNumber = await googleCalendar.getOrderNumber(appointmentType, date);
+    const orderNumber = await googleCalendar.getOrderNumber(appointmentType, date, dateTime);
     
     // Create calendar event
     const typeConfig = config.appointmentTypes[appointmentType];

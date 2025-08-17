@@ -326,13 +326,49 @@ Cena: ${priceText}
 Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')}`;
   }
 
-  async getOrderNumber(appointmentType, date) {
+  async getOrderNumber(appointmentType, date, appointmentDateTime) {
+    // Sports examinations don't get order numbers
+    const typeConfig = config.appointmentTypes[appointmentType];
+    if (!typeConfig || !typeConfig.orderNumbers) {
+      return null;
+    }
+
     const events = await this.getEventsForDay(date);
-    const typeEvents = events.filter(event => 
-      event.summary && event.summary.includes(appointmentType.toUpperCase())
-    );
     
-    return typeEvents.length + 1;
+    // Filter events that have order numbers (exclude sports exams and other non-numbered types)
+    const orderedEvents = events.filter(event => {
+      if (!event.start || !event.start.dateTime) return false;
+      
+      // Check if this event type uses order numbers
+      const eventAppointmentType = Object.keys(config.appointmentTypes).find(type => {
+        const typeName = config.appointmentTypes[type].name;
+        return event.summary && event.summary.includes(typeName);
+      });
+      
+      return eventAppointmentType && config.appointmentTypes[eventAppointmentType].orderNumbers;
+    });
+
+    // Sort events by time to get proper chronological order
+    orderedEvents.sort((a, b) => {
+      const timeA = dayjs(a.start.dateTime);
+      const timeB = dayjs(b.start.dateTime);
+      return timeA.isBefore(timeB) ? -1 : 1;
+    });
+
+    // Find the position where this new appointment should be inserted
+    const appointmentTime = dayjs(appointmentDateTime);
+    let orderNumber = 1;
+    
+    for (const event of orderedEvents) {
+      const eventTime = dayjs(event.start.dateTime);
+      if (appointmentTime.isAfter(eventTime)) {
+        orderNumber++;
+      } else {
+        break;
+      }
+    }
+    
+    return orderNumber;
   }
 
   async isVacationDay(date) {

@@ -367,7 +367,7 @@ async function handleBookAppointment(parameters) {
     
     // Get order number
     const date = dayjs(date_time).format('YYYY-MM-DD');
-    const orderNumber = await googleCalendar.getOrderNumber(appointment_type, date);
+    const orderNumber = await googleCalendar.getOrderNumber(appointment_type, date, date_time);
     
     // Create calendar event
     const typeConfig = config.appointmentTypes[appointment_type];
@@ -614,7 +614,7 @@ async function handleRescheduleAppointment(parameters) {
     
     // Create new appointment
     const typeConfig = config.appointmentTypes[appointmentType];
-    const newOrderNumber = await googleCalendar.getOrderNumber(appointmentType, dayjs(finalNewDateTime).format('YYYY-MM-DD'));
+    const newOrderNumber = await googleCalendar.getOrderNumber(appointmentType, dayjs(finalNewDateTime).format('YYYY-MM-DD'), finalNewDateTime);
     
     const eventData = {
       appointmentType: appointmentType,

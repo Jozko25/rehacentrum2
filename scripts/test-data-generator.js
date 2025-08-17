@@ -117,7 +117,7 @@ async function generateTestData() {
     for (const appointment of testAppointments) {
       // Get order number for this appointment type and date
       const date = dayjs(appointment.dateTime).format('YYYY-MM-DD');
-      const orderNumber = await googleCalendar.getOrderNumber(appointment.appointmentType, date);
+      const orderNumber = await googleCalendar.getOrderNumber(appointment.appointmentType, date, appointment.dateTime);
       
       const eventData = {
         ...appointment,
