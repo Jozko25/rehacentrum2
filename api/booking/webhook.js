@@ -323,11 +323,22 @@ async function handleBookAppointment(parameters) {
     
     const formattedPhone = phoneValidation.formatted;
 
+    // INSURANCE VALIDATION: Validate and normalize insurance company name
+    const insuranceValidator = require('../../utils/insuranceValidator');
+    const insuranceValidation = insuranceValidator.validateAndNormalizeInsurance(insurance);
+    
+    if (!insuranceValidation.isValid) {
+      return {
+        success: false,
+        message: insuranceValidation.error
+      };
+    }
+
     const patientData = {
       name: patient_name,
       surname: patient_surname,
       phone: formattedPhone, // Use formatted phone
-      insurance: insurance
+      insurance: insuranceValidation.normalized // Use normalized insurance name
     };
 
     // Validate complete appointment

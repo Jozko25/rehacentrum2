@@ -7,7 +7,7 @@ const config = {
   // Google Calendar Configuration
   calendar: {
     credentials: path.join(__dirname, 'credentials.json'),
-    calendarId: 'airecepcia@gmail.com',
+    calendarId: '1rehacentrum@gmail.com',
     timeZone: 'Europe/Bratislava'
   },
   
