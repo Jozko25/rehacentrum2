@@ -289,9 +289,10 @@ app.post('/api/admin/login', checkIPWhitelist, (req, res) => {
 
   if (!adminUsername || !adminPassword) {
     console.error('❌ Admin credentials not configured in environment');
+    console.log('💡 Please set ADMIN_USERNAME and ADMIN_PASSWORD in Railway environment variables');
     return res.status(500).json({ 
       error: 'Server configuration error',
-      message: 'Admin authentication not properly configured'
+      message: 'Admin credentials not configured. Please contact system administrator.'
     });
   }
 
