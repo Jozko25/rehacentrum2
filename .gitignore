@@ -34,3 +34,7 @@ new_credentials.json
 .Trashes
 ehthumbs.db
 Thumbs.db
+.env
+config/credentials.json
+RAILWAY_*.txt
+GOOGLE_*.txt
