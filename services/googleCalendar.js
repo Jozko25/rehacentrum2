@@ -20,7 +20,18 @@ class GoogleCalendarService {
       
       // Try environment variables first (for production)
       let credentials;
-      if (process.env.GOOGLE_CREDENTIALS) {
+      if (process.env.GOOGLE_CREDENTIALS_BASE64) {
+        console.log('📝 Using GOOGLE_CREDENTIALS_BASE64 from environment');
+        try {
+          const decodedCredentials = Buffer.from(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64').toString();
+          credentials = JSON.parse(decodedCredentials);
+          console.log('✅ Successfully decoded and parsed base64 GOOGLE_CREDENTIALS');
+          console.log('🔑 Credential keys:', Object.keys(credentials));
+        } catch (parseError) {
+          console.error('❌ Failed to decode/parse GOOGLE_CREDENTIALS_BASE64:', parseError);
+          throw parseError;
+        }
+      } else if (process.env.GOOGLE_CREDENTIALS) {
         console.log('📝 Using GOOGLE_CREDENTIALS from environment');
         try {
           credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
