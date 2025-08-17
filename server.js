@@ -140,7 +140,7 @@ app.get('/health', async (req, res) => {
     status: 'OK',
     message: 'Rehacentrum API je v prevádzke',
     timestamp: dayjs().tz(config.calendar.timeZone).format(),
-    version: '1.0.3', // Admin security deployed
+    version: '1.0.4', // Modern admin UI deployed
     services: {
       calendar: googleCalendar.initialized,
       sms: smsService.getStatus()
@@ -148,8 +148,16 @@ app.get('/health', async (req, res) => {
   });
 });
 
-// Admin Security Middleware
-const adminSecurity = (req, res, next) => {
+// Session storage for admin authentication
+const adminSessions = new Map();
+
+// Generate session token
+function generateSessionToken() {
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+}
+
+// IP Whitelist Check Middleware
+const checkIPWhitelist = (req, res, next) => {
   // Get client IP (handle various proxy scenarios)
   const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
                    req.headers['x-real-ip'] ||
@@ -189,52 +197,46 @@ const adminSecurity = (req, res, next) => {
     });
   }
 
-  // HTTP Basic Authentication
-  const auth = req.headers.authorization;
-  if (!auth || !auth.startsWith('Basic ')) {
-    res.set('WWW-Authenticate', 'Basic realm="Rehacentrum Admin Panel"');
+  req.clientIP = clientIP;
+  next();
+};
+
+// Admin Authentication Middleware (for dashboard access)
+const requireAdminAuth = (req, res, next) => {
+  const token = req.headers.authorization?.replace('Bearer ', '') || 
+                req.query.token || 
+                req.body.token;
+
+  if (!token || !adminSessions.has(token)) {
+    // Redirect to login page for browser requests
+    if (req.accepts('html')) {
+      return res.redirect('/admin');
+    }
     return res.status(401).json({ 
       error: 'Authentication required',
-      message: 'Please provide admin credentials'
+      message: 'Please log in to access the admin panel'
     });
   }
 
-  try {
-    const credentials = Buffer.from(auth.slice(6), 'base64').toString();
-    const [username, password] = credentials.split(':');
-
-    // Get admin credentials from environment
-    const adminUsername = process.env.ADMIN_USERNAME;
-    const adminPassword = process.env.ADMIN_PASSWORD;
-
-    if (!adminUsername || !adminPassword) {
-      console.error('❌ Admin credentials not configured in environment');
-      return res.status(500).json({ 
-        error: 'Server configuration error',
-        message: 'Admin authentication not properly configured'
-      });
+  const session = adminSessions.get(token);
+  if (Date.now() > session.expires) {
+    adminSessions.delete(token);
+    // Redirect to login page for browser requests
+    if (req.accepts('html')) {
+      return res.redirect('/admin');
     }
-
-    if (username === adminUsername && password === adminPassword) {
-      console.log(`✅ Admin authentication successful for user: ${username} from IP: ${clientIP}`);
-      addLog('admin', `Admin panel accessed by ${username} from ${clientIP}`);
-      next();
-    } else {
-      console.log(`❌ Invalid admin credentials for user: ${username} from IP: ${clientIP}`);
-      addLog('warning', `Failed admin login attempt: ${username} from ${clientIP}`);
-      res.set('WWW-Authenticate', 'Basic realm="Rehacentrum Admin Panel"');
-      return res.status(401).json({ 
-        error: 'Invalid credentials',
-        message: 'Username or password is incorrect'
-      });
-    }
-  } catch (error) {
-    console.error('❌ Auth parsing error:', error);
-    return res.status(400).json({ 
-      error: 'Invalid authentication format'
+    return res.status(401).json({ 
+      error: 'Session expired',
+      message: 'Please log in again'
     });
   }
+
+  req.adminUser = session.username;
+  next();
 };
+
+// Combined admin security (IP + Auth)
+const adminSecurity = [checkIPWhitelist, requireAdminAuth];
 
 // Root endpoint - simple status (no sensitive info)
 app.get('/', (req, res) => {
@@ -249,8 +251,70 @@ app.get('/', (req, res) => {
   });
 });
 
+// Admin Login Page
+app.get('/admin', checkIPWhitelist, (req, res) => {
+  // Check if already authenticated
+  const token = req.query.token;
+  if (token && adminSessions.has(token)) {
+    const session = adminSessions.get(token);
+    if (Date.now() < session.expires) {
+      // Redirect to dashboard
+      return res.redirect('/admin/dashboard?token=' + token);
+    }
+  }
+  
+  // Serve login page
+  res.sendFile('/Users/janharmady/Desktop/rehacentrum2/public/admin-login.html');
+});
+
+// Admin Login API
+app.post('/api/admin/login', checkIPWhitelist, (req, res) => {
+  const { username, password } = req.body;
+
+  // Get admin credentials from environment
+  const adminUsername = process.env.ADMIN_USERNAME;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminUsername || !adminPassword) {
+    console.error('❌ Admin credentials not configured in environment');
+    return res.status(500).json({ 
+      error: 'Server configuration error',
+      message: 'Admin authentication not properly configured'
+    });
+  }
+
+  if (username === adminUsername && password === adminPassword) {
+    const token = generateSessionToken();
+    const expires = Date.now() + (4 * 60 * 60 * 1000); // 4 hours
+    
+    adminSessions.set(token, {
+      username,
+      expires,
+      ip: req.clientIP,
+      createdAt: Date.now()
+    });
+
+    console.log(`✅ Admin authentication successful for user: ${username} from IP: ${req.clientIP}`);
+    addLog('admin', `Admin panel accessed by ${username} from ${req.clientIP}`);
+    
+    res.json({ 
+      success: true, 
+      token,
+      message: 'Login successful'
+    });
+  } else {
+    console.log(`❌ Invalid admin credentials for user: ${username} from IP: ${req.clientIP}`);
+    addLog('warning', `Failed admin login attempt: ${username} from ${req.clientIP}`);
+    
+    res.status(401).json({ 
+      error: 'Invalid credentials',
+      message: 'Nesprávne používateľské meno alebo heslo'
+    });
+  }
+});
+
 // Protected Admin Dashboard
-app.get('/admin', adminSecurity, async (req, res) => {
+app.get('/admin/dashboard', adminSecurity, async (req, res) => {
   // Ensure services are initialized for dashboard
   if (!googleCalendar.initialized) {
     try {
@@ -265,7 +329,7 @@ app.get('/admin', adminSecurity, async (req, res) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Rehacentrum API Dashboard</title>
+        <title>AI Recepcia - Admin Dashboard</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -653,12 +717,11 @@ app.get('/admin', adminSecurity, async (req, res) => {
             <div class="header">
                 <h1>
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 16px;">
-                        <path d="M19 3H5C3.89 3 3 3.89 3 5V19C3 20.11 3.89 21 5 21H19C20.11 21 21 20.11 21 19V5C21 3.89 20.11 3 19 3ZM19 19H5V5H19V19Z" fill="currentColor"/>
-                        <path d="M7 7H17V9H7V7ZM7 11H17V13H7V11ZM7 15H14V17H7V15Z" fill="currentColor"/>
+                        <path d="M12 2L13.09 8.26L20.78 6L15.5 12L20.78 18L13.09 15.74L12 22L10.91 15.74L3.22 18L8.5 12L3.22 6L10.91 8.26L12 2Z" fill="currentColor"/>
                     </svg>
-                    Rehacentrum API Dashboard
+                    AI Recepcia
                 </h1>
-                <p>Enterprise monitoring & system health dashboard | Last updated: <span id="lastUpdate" style="font-weight: 600; color: #fbbf24;">${dayjs().tz(config.calendar.timeZone).format('YYYY-MM-DD HH:mm:ss')}</span></p>
+                <p>Rehacentrum Humenné - Admin Dashboard | Last updated: <span id="lastUpdate" style="font-weight: 600; color: #fbbf24;">${dayjs().tz(config.calendar.timeZone).format('YYYY-MM-DD HH:mm:ss')}</span></p>
             </div>
 
             <div class="basic-info">
