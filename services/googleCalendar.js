@@ -18,6 +18,14 @@ class GoogleCalendarService {
     try {
       console.log('🔧 Initializing Google Calendar service...');
       
+      // TEMPORARY: Skip Google Calendar initialization to prevent app crash
+      if (process.env.SKIP_GOOGLE_CALENDAR === 'true') {
+        console.log('⚠️ Google Calendar service SKIPPED (SKIP_GOOGLE_CALENDAR=true)');
+        console.log('🚀 App will run without calendar integration');
+        this.initialized = false;
+        return;
+      }
+      
       // Try Railway build command file first (most reliable)
       let credentials;
       if (process.env.GOOGLE_APPLICATION_CREDENTIALS && require('fs').existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
@@ -111,6 +119,11 @@ class GoogleCalendarService {
   async ensureInitialized() {
     if (!this.initialized) {
       await this.initialize();
+    }
+    
+    // If still not initialized after attempting, throw descriptive error
+    if (!this.initialized) {
+      throw new Error('Google Calendar service is not available (SKIP_GOOGLE_CALENDAR=true or credentials missing)');
     }
   }
 
