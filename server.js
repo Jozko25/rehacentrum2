@@ -19,6 +19,25 @@ dayjs.extend(timezone);
 const app = express();
 const PORT = config.port;
 
+// Security Headers Middleware
+app.use((req, res, next) => {
+  // Security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  
+  // Admin-specific security headers
+  if (req.path.startsWith('/admin')) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  
+  next();
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -140,7 +159,7 @@ app.get('/health', async (req, res) => {
     status: 'OK',
     message: 'Rehacentrum API je v prevádzke',
     timestamp: dayjs().tz(config.calendar.timeZone).format(),
-    version: '1.0.4', // Modern admin UI deployed
+    version: '1.0.5', // Security hardening deployed
     services: {
       calendar: googleCalendar.initialized,
       sms: smsService.getStatus()
@@ -156,16 +175,34 @@ function generateSessionToken() {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
 
+// Security: Track failed login attempts
+const failedAttempts = new Map();
+const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
+const MAX_ATTEMPTS = 5;
+
 // IP Whitelist Check Middleware
 const checkIPWhitelist = (req, res, next) => {
-  // Get client IP (handle various proxy scenarios)
-  const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-                   req.headers['x-real-ip'] ||
-                   req.connection.remoteAddress ||
-                   req.socket.remoteAddress ||
-                   (req.connection.socket ? req.connection.socket.remoteAddress : null);
+  // SECURITY: Get real client IP - don't trust proxy headers in production
+  let clientIP;
+  
+  // In development or when explicitly trusting proxies
+  const trustProxies = process.env.TRUST_PROXY_HEADERS === 'true';
+  
+  if (trustProxies) {
+    // Only trust proxy headers if explicitly enabled
+    clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+               req.headers['x-real-ip'] ||
+               req.connection.remoteAddress ||
+               req.socket.remoteAddress ||
+               (req.connection.socket ? req.connection.socket.remoteAddress : null);
+  } else {
+    // Production: only use direct connection IP
+    clientIP = req.connection.remoteAddress ||
+               req.socket.remoteAddress ||
+               (req.connection.socket ? req.connection.socket.remoteAddress : null);
+  }
 
-  console.log(`🔍 Admin access attempt from IP: ${clientIP}`);
+  console.log(`🔍 Admin access attempt from IP: ${clientIP} (trustProxies: ${trustProxies})`);
 
   // IP Whitelist (support for multiple networks)
   const allowedIPs = (process.env.ADMIN_ALLOWED_IPS || '').split(',').map(ip => ip.trim()).filter(Boolean);
@@ -279,9 +316,36 @@ app.get('/admin', checkIPWhitelist, (req, res) => {
   });
 });
 
+// Rate limiting function
+function checkRateLimit(clientIP) {
+  const now = Date.now();
+  const attempts = failedAttempts.get(clientIP) || [];
+  
+  // Clean old attempts (older than rate limit window)
+  const recentAttempts = attempts.filter(time => now - time < RATE_LIMIT_WINDOW);
+  failedAttempts.set(clientIP, recentAttempts);
+  
+  return recentAttempts.length < MAX_ATTEMPTS;
+}
+
+function recordFailedAttempt(clientIP) {
+  const attempts = failedAttempts.get(clientIP) || [];
+  attempts.push(Date.now());
+  failedAttempts.set(clientIP, attempts);
+}
+
 // Admin Login API
 app.post('/api/admin/login', checkIPWhitelist, (req, res) => {
   const { username, password } = req.body;
+
+  // SECURITY: Rate limiting check
+  if (!checkRateLimit(req.clientIP)) {
+    console.log(`🚫 Rate limit exceeded for IP: ${req.clientIP}`);
+    return res.status(429).json({
+      error: 'Too many attempts',
+      message: 'Príliš veľa pokusov o prihlásenie. Skúste to znova o 15 minút.'
+    });
+  }
 
   // Get admin credentials from environment
   const adminUsername = process.env.ADMIN_USERNAME;
@@ -290,9 +354,9 @@ app.post('/api/admin/login', checkIPWhitelist, (req, res) => {
   if (!adminUsername || !adminPassword) {
     console.error('❌ Admin credentials not configured in environment');
     console.log('💡 Please set ADMIN_USERNAME and ADMIN_PASSWORD in Railway environment variables');
-    return res.status(500).json({ 
-      error: 'Server configuration error',
-      message: 'Admin credentials not configured. Please contact system administrator.'
+    return res.status(401).json({ 
+      error: 'Authentication failed',
+      message: 'Nesprávne prihlasovacie údaje'
     });
   }
 
@@ -318,6 +382,9 @@ app.post('/api/admin/login', checkIPWhitelist, (req, res) => {
   } else {
     console.log(`❌ Invalid admin credentials for user: ${username} from IP: ${req.clientIP}`);
     addLog('warning', `Failed admin login attempt: ${username} from ${req.clientIP}`);
+    
+    // SECURITY: Record failed attempt for rate limiting
+    recordFailedAttempt(req.clientIP);
     
     res.status(401).json({ 
       error: 'Invalid credentials',
@@ -921,18 +988,47 @@ app.get('/admin/dashboard', adminSecurity, async (req, res) => {
 
 // IP Detection endpoint (for easy whitelist setup)
 app.get('/my-ip', (req, res) => {
-  const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-                   req.headers['x-real-ip'] ||
-                   req.connection.remoteAddress ||
-                   req.socket.remoteAddress ||
-                   (req.connection.socket ? req.connection.socket.remoteAddress : null);
+  const trustProxies = process.env.TRUST_PROXY_HEADERS === 'true';
+  let clientIP;
+  
+  if (trustProxies) {
+    clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+               req.headers['x-real-ip'] ||
+               req.connection.remoteAddress;
+  } else {
+    clientIP = req.connection.remoteAddress ||
+               req.socket.remoteAddress;
+  }
   
   res.json({
     ip: clientIP,
     message: 'Your current IP address',
     userAgent: req.headers['user-agent'],
-    timestamp: dayjs().tz(config.calendar.timeZone).format()
+    timestamp: dayjs().tz(config.calendar.timeZone).format(),
+    security: {
+      trustProxies: trustProxies,
+      ipSource: trustProxies ? 'proxy-headers' : 'direct-connection'
+    }
   });
+});
+
+// Security Status Endpoint
+app.get('/api/security-status', adminSecurity, (req, res) => {
+  const now = Date.now();
+  const securityStats = {
+    failedAttempts: Array.from(failedAttempts.entries()).map(([ip, attempts]) => ({
+      ip,
+      attemptCount: attempts.filter(time => now - time < RATE_LIMIT_WINDOW).length,
+      lastAttempt: attempts.length > 0 ? dayjs(Math.max(...attempts)).format() : null
+    })).filter(stat => stat.attemptCount > 0),
+    activeSessions: adminSessions.size,
+    rateLimitWindow: RATE_LIMIT_WINDOW / 1000 / 60, // minutes
+    maxAttempts: MAX_ATTEMPTS,
+    securityHeaders: true,
+    ipSpoofProtection: process.env.TRUST_PROXY_HEADERS !== 'true'
+  };
+  
+  res.json(securityStats);
 });
 
 // Protected Log management endpoints
