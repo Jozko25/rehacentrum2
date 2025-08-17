@@ -2,7 +2,7 @@ const { google } = require('googleapis');
 const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc');
 const timezone = require('dayjs/plugin/timezone');
-const config = require('./config');
+const config = require('../config/config');
 
 dayjs.extend(utc);
 dayjs.extend(timezone);

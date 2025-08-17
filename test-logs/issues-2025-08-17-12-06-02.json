@@ -1,0 +1,35 @@
+{
+  "summary": {
+    "totalIssues": 1,
+    "critical": 0,
+    "high": 1,
+    "medium": 0,
+    "low": 0
+  },
+  "testResults": {
+    "total": 17,
+    "passed": 16,
+    "failed": 1,
+    "errors": [
+      {
+        "testName": "Service initialization",
+        "error": "error:1E08010C:DECODER routines::unsupported"
+      }
+    ]
+  },
+  "issues": [
+    {
+      "id": "ISSUE-1",
+      "timestamp": "2025-08-17 12:06:02",
+      "severity": "HIGH",
+      "category": "TEST_FAILURE",
+      "description": "Test failed: Service initialization",
+      "details": {
+        "testName": "Service initialization",
+        "error": "error:1E08010C:DECODER routines::unsupported",
+        "stack": "Error: error:1E08010C:DECODER routines::unsupported\n    at Sign.sign (node:internal/crypto/sig:128:29)\n    at Object.sign (/Users/janharmady/Desktop/rehacentrum2/node_modules/jwa/index.js:166:45)\n    at Object.jwsSign [as sign] (/Users/janharmady/Desktop/rehacentrum2/node_modules/jws/lib/sign-stream.js:32:24)\n    at GoogleToken._GoogleToken_requestToken (/Users/janharmady/Desktop/rehacentrum2/node_modules/gtoken/build/src/index.js:235:27)\n    at GoogleToken._GoogleToken_getTokenAsyncInner (/Users/janharmady/Desktop/rehacentrum2/node_modules/gtoken/build/src/index.js:180:97)\n    at GoogleToken._GoogleToken_getTokenAsync (/Users/janharmady/Desktop/rehacentrum2/node_modules/gtoken/build/src/index.js:160:173)\n    at GoogleToken.getToken (/Users/janharmady/Desktop/rehacentrum2/node_modules/gtoken/build/src/index.js:110:102)\n    at JWT.refreshTokenNoCache (/Users/janharmady/Desktop/rehacentrum2/node_modules/google-auth-library/build/src/auth/jwtclient.js:173:36)\n    at JWT.refreshToken (/Users/janharmady/Desktop/rehacentrum2/node_modules/google-auth-library/build/src/auth/oauth2client.js:187:24)\n    at JWT.getRequestMetadataAsync (/Users/janharmady/Desktop/rehacentrum2/node_modules/google-auth-library/build/src/auth/oauth2client.js:333:28)"
+      }
+    }
+  ],
+  "generatedAt": "2025-08-17 12:06:02"
+}

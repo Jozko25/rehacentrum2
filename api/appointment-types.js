@@ -1,4 +1,4 @@
-const config = require('../config');
+const config = require('../config/config');
 const { addLog } = require('../lib/logger');
 
 module.exports = async (req, res) => {

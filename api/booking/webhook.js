@@ -11,11 +11,11 @@ dayjs.extend(localeData);
 dayjs.locale('sk');
 
 // Import services
-const config = require('../../config');
-const googleCalendar = require('../../googleCalendar');
-const appointmentValidator = require('../../appointmentValidator');
-const smsService = require('../../smsService');
-const holidayService = require('../../holidayService');
+const config = require('../../config/config');
+const googleCalendar = require('../../services/googleCalendar');
+const appointmentValidator = require('../../services/appointmentValidator');
+const smsService = require('../../services/smsService');
+const holidayService = require('../../services/holidayService');
 const { addLog } = require('../../lib/logger');
 
 // Handle getting more available slots

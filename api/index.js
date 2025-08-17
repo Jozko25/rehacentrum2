@@ -3,9 +3,9 @@ const utc = require('dayjs/plugin/utc');
 const timezone = require('dayjs/plugin/timezone');
 
 // Import services
-const config = require('../config');
-const googleCalendar = require('../googleCalendar');
-const smsService = require('../smsService');
+const config = require('../config/config');
+const googleCalendar = require('../services/googleCalendar');
+const smsService = require('../services/smsService');
 const { addLog, getLogs } = require('../lib/logger');
 
 dayjs.extend(utc);

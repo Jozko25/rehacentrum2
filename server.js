@@ -6,11 +6,11 @@ const utc = require('dayjs/plugin/utc');
 const timezone = require('dayjs/plugin/timezone');
 
 // Import services
-const config = require('./config');
-const googleCalendar = require('./googleCalendar');
-const appointmentValidator = require('./appointmentValidator');
-const smsService = require('./smsService');
-const holidayService = require('./holidayService');
+const config = require('./config/config');
+const googleCalendar = require('./services/googleCalendar');
+const appointmentValidator = require('./services/appointmentValidator');
+const smsService = require('./services/smsService');
+const holidayService = require('./services/holidayService');
 
 // Configure dayjs
 dayjs.extend(utc);
@@ -656,7 +656,7 @@ app.post('/api/sms/preview', async (req, res) => {
 // SMS templates management endpoint
 app.get('/api/sms/templates', (req, res) => {
   try {
-    const { smsConfig } = require('./sms-config');
+    const { smsConfig } = require('./config/sms-config');
     
     // Get all templates with sample previews
     const templates = {};

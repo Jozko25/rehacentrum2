@@ -46,7 +46,7 @@
           "id": "phone",
           "type": "string",
           "value_type": "llm_prompt",
-          "description": "Telefónne číslo pacienta pre overenie",
+          "description": "Telefónne číslo pacienta - VŽDY najprv overte {{system_caller_id}}, ak nesúhlasí, požiadajte o pomalé diktovanie cifru po cifre. Formát: 0910123456 (10 číslic) alebo +421910123456",
           "dynamic_variable": "",
           "constant_value": "",
           "required": false

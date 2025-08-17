@@ -1,5 +1,5 @@
-const config = require('./config');
-const googleCalendar = require('./googleCalendar');
+const config = require('../config/config');
+const googleCalendar = require('../services/googleCalendar');
 const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc');
 const timezone = require('dayjs/plugin/timezone');

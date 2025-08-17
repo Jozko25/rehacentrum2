@@ -4,7 +4,7 @@ const timezone = require('dayjs/plugin/timezone');
 const weekday = require('dayjs/plugin/weekday');
 const isSameOrAfter = require('dayjs/plugin/isSameOrAfter');
 const isSameOrBefore = require('dayjs/plugin/isSameOrBefore');
-const config = require('./config');
+const config = require('../config/config');
 const googleCalendar = require('./googleCalendar');
 const holidayService = require('./holidayService');
 

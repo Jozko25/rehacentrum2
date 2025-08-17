@@ -1,7 +1,7 @@
 const twilio = require('twilio');
 const dayjs = require('dayjs');
-const config = require('./config');
-const { formatSMSMessage, validateSMSMessage } = require('./sms-config');
+const config = require('../config/config');
+const { formatSMSMessage, validateSMSMessage } = require('../config/sms-config');
 
 class SMSService {
   constructor() {
