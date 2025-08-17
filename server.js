@@ -105,6 +105,18 @@ async function initializeServices() {
   }
 }
 
+// Debug environment variables (temporary)
+app.get('/debug-env', (req, res) => {
+  res.json({
+    TWILIO_ENABLED: process.env.TWILIO_ENABLED,
+    TWILIO_ENABLED_TYPE: typeof process.env.TWILIO_ENABLED,
+    HAS_ACCOUNT_SID: !!process.env.TWILIO_ACCOUNT_SID,
+    HAS_AUTH_TOKEN: !!process.env.TWILIO_AUTH_TOKEN,
+    config_sms_enabled: config.sms.enabled,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Health check endpoint
 app.get('/health', async (req, res) => {
   // Ensure services are initialized for health check
