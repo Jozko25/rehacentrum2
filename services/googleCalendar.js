@@ -381,19 +381,34 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
       const endTime = dayjs(`${date} ${schedule.end}`, 'YYYY-MM-DD HH:mm', config.calendar.timeZone);
       console.log(`🕐 Start time: ${currentTime.format('HH:mm')}, End time: ${endTime.format('HH:mm')}`);
 
-      while (currentTime.isBefore(endTime)) {
-        const timeSlot = currentTime.format('HH:mm');
-        
+      // Generate slots with both predefined intervals AND every 10-minute slot
+      const allPossibleTimes = new Set();
+      
+      // Add predefined interval slots
+      let intervalTime = currentTime.clone();
+      while (intervalTime.isBefore(endTime)) {
+        allPossibleTimes.add(intervalTime.format('HH:mm'));
+        intervalTime = intervalTime.add(schedule.interval, 'minute');
+      }
+      
+      // Add every 10-minute slot to cover user requests like 8:00
+      let tenMinTime = currentTime.clone();
+      while (tenMinTime.isBefore(endTime)) {
+        allPossibleTimes.add(tenMinTime.format('HH:mm'));
+        tenMinTime = tenMinTime.add(10, 'minute');
+      }
+      
+      // Generate available slots from all possible times
+      Array.from(allPossibleTimes).sort().forEach(timeSlot => {
         if (!occupiedTimes.has(timeSlot)) {
+          const slotDateTime = dayjs(`${date} ${timeSlot}`, 'YYYY-MM-DD HH:mm', config.calendar.timeZone);
           availableSlots.push({
             time: timeSlot,
-            datetime: currentTime.format(), // Use local timezone format with DST awareness
+            datetime: slotDateTime.format(), // Use local timezone format with DST awareness
             available: true
           });
         }
-
-        currentTime = currentTime.add(schedule.interval, 'minute');
-      }
+      });
     });
 
     return availableSlots;

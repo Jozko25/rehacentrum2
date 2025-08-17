@@ -133,7 +133,7 @@ async function initializeServices() {
 }
 
 async function handleGetAvailableSlots(parameters) {
-  const { date, appointment_type, offset = 0, show_more = false } = parameters;
+  const { date, appointment_type, time, offset = 0, show_more = false } = parameters;
   
   if (!date || !appointment_type) {
     return {
@@ -156,6 +156,33 @@ async function handleGetAvailableSlots(parameters) {
     const formattedDate = dayjs(date).format('DD.MM.YYYY');
     const dayName = dayjs(date).format('dddd');
 
+    // If user requested a specific time, check if it's available first
+    if (time) {
+      const requestedSlot = availableSlots.find(slot => slot.time === time);
+      if (requestedSlot) {
+        return {
+          success: true,
+          message: `Skvelé! Termín ${time} na ${dayName} ${formattedDate} pre ${typeConfig.name} je dostupný. Môžeme pokračovať s rezerváciou. Potrebujem ešte Vaše meno, priezvisko, telefónne číslo a poisťovňu.`
+        };
+      } else {
+        // Specific time not available, show alternatives
+        if (availableSlots.length === 0) {
+          return {
+            success: true,
+            message: `Žiaľ, termín ${time} nie je dostupný a na ${dayName} ${formattedDate} nie sú dostupné žiadne voľné termíny pre ${typeConfig.name}.`
+          };
+        } else {
+          const slotsToShow = availableSlots.slice(0, 3);
+          const slotTimes = slotsToShow.map(slot => slot.time).join(', ');
+          return {
+            success: true,
+            message: `Žiaľ, termín ${time} nie je dostupný. Alternatívne termíny na ${dayName} ${formattedDate} pre ${typeConfig.name} sú: ${slotTimes}. Ktorý z týchto termínov Vám vyhovuje?`
+          };
+        }
+      }
+    }
+
+    // General availability check without specific time
     if (availableSlots.length === 0) {
       return {
         success: true,
@@ -759,6 +786,10 @@ module.exports = async (req, res) => {
         
       case 'get_more_slots':
         result = await handleGetMoreSlots(parameters || {});
+        break;
+        
+      case 'check_time_availability':
+        result = await handleGetAvailableSlots(parameters || {});
         break;
         
       default:

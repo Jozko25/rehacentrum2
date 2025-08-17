@@ -154,7 +154,7 @@
           "id": "action",
           "type": "string",
           "value_type": "llm_prompt",
-          "description": "Typ akcie: get_available_slots, find_closest_slot, book_appointment, cancel_appointment, reschedule_appointment, get_more_slots",
+          "description": "Typ akcie: get_available_slots, check_time_availability, find_closest_slot, book_appointment, cancel_appointment, reschedule_appointment, get_more_slots",
           "dynamic_variable": "",
           "constant_value": "",
           "required": true
