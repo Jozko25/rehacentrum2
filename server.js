@@ -140,7 +140,7 @@ app.get('/health', async (req, res) => {
     status: 'OK',
     message: 'Rehacentrum API je v prevádzke',
     timestamp: dayjs().tz(config.calendar.timeZone).format(),
-    version: '1.0.2', // Force restart to pick up TWILIO_ENABLED=true
+    version: '1.0.3', // Admin security deployed
     services: {
       calendar: googleCalendar.initialized,
       sms: smsService.getStatus()
