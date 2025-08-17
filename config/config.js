@@ -14,7 +14,7 @@ const config = {
   // Twilio SMS Configuration (toggleable)
   sms: {
     enabled: process.env.TWILIO_ENABLED === 'true',
-    accountSid: process.env.TWILIO_ACCOUNT_SID,
+    accountSid: process.env.TWILIO_ACTUAL_ACCOUNT_SID || process.env.TWILIO_ACCOUNT_SID,
     authToken: process.env.TWILIO_AUTH_TOKEN,
     phoneNumber: process.env.TWILIO_PHONE_NUMBER || '+12678638448',
     // SMS templates are configured in sms-config.js
