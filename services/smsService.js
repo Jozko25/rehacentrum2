@@ -6,8 +6,10 @@ const { formatSMSMessage, validateSMSMessage } = require('../config/sms-config')
 class SMSService {
   constructor() {
     this.client = null;
-    this.enabled = config.sms.enabled;
+    // Force re-read environment variable on each check
+    this.enabled = process.env.TWILIO_ENABLED === 'true';
     this.initialized = false;
+    console.log(`🔍 SMS Service - TWILIO_ENABLED: ${process.env.TWILIO_ENABLED}, enabled: ${this.enabled}`);
   }
 
   async initialize() {
@@ -227,11 +229,14 @@ class SMSService {
   }
 
   getStatus() {
+    // Re-check environment variable each time
+    this.enabled = process.env.TWILIO_ENABLED === 'true';
     return {
       enabled: this.enabled,
       initialized: this.initialized,
       hasCredentials: !!(config.sms.accountSid && config.sms.authToken),
-      phoneNumber: config.sms.phoneNumber
+      phoneNumber: config.sms.phoneNumber,
+      envVar: process.env.TWILIO_ENABLED // Debug info
     };
   }
 
