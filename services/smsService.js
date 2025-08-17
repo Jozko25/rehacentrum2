@@ -28,16 +28,19 @@ class SMSService {
     }
 
     try {
+      console.log(`🔍 Initializing SMS with AccountSID: ${config.sms.accountSid?.substring(0, 10)}...`);
       this.client = twilio(config.sms.accountSid, config.sms.authToken);
       
       // Test the connection
+      console.log('🧪 Testing Twilio connection...');
       await this.client.api.accounts(config.sms.accountSid).fetch();
       
       this.initialized = true;
-      console.log('SMS service initialized successfully');
+      console.log('✅ SMS service initialized successfully');
       return true;
     } catch (error) {
-      console.error('Failed to initialize SMS service:', error.message);
+      console.error('❌ Failed to initialize SMS service:', error.message);
+      console.error('❌ Error details:', error);
       this.enabled = false;
       return false;
     }
