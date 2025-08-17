@@ -11,6 +11,7 @@ const googleCalendar = require('./services/googleCalendar');
 const appointmentValidator = require('./services/appointmentValidator');
 const smsService = require('./services/smsService');
 const holidayService = require('./services/holidayService');
+const platformManager = require('./services/platformManager');
 
 // Configure dayjs
 dayjs.extend(utc);
@@ -118,6 +119,7 @@ async function initializeServices() {
   try {
     await googleCalendar.initialize();
     await smsService.initialize();
+    await platformManager.initialize();
     addLog('success', 'All services initialized successfully');
   } catch (error) {
     addLog('error', 'Failed to initialize services', error.message);
@@ -1424,8 +1426,71 @@ app.get('/api/requirements/:type', (req, res) => {
   });
 });
 
-// ElevenLabs webhook endpoint (route to the webhook handler)
+// Platform Management API endpoints
+app.get('/api/platform/status', (req, res) => {
+  try {
+    const status = platformManager.getStatus();
+    res.json(status);
+  } catch (error) {
+    addLog('error', 'Failed to get platform status', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/platform/config', (req, res) => {
+  try {
+    const config = platformManager.getPlatformConfig();
+    res.json(config);
+  } catch (error) {
+    addLog('error', 'Failed to get platform config', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/platform/zadarma-config', (req, res) => {
+  try {
+    const config = platformManager.getZadarmaConfig();
+    res.json(config);
+  } catch (error) {
+    addLog('error', 'Failed to get Zadarma config', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/platform/switch', adminSecurity, async (req, res) => {
+  try {
+    const { platform, reason } = req.body;
+    
+    if (!platform || !['elevenlabs', 'vapi', 'auto'].includes(platform)) {
+      return res.status(400).json({
+        error: 'Invalid platform',
+        message: 'Platform must be: elevenlabs, vapi, or auto'
+      });
+    }
+
+    const result = await platformManager.switchPlatform(platform, reason || 'Manual admin override');
+    res.json(result);
+  } catch (error) {
+    addLog('error', 'Failed to switch platform', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/platform/statistics', adminSecurity, (req, res) => {
+  try {
+    platformManager.resetStatistics();
+    res.json({ message: 'Platform statistics reset successfully' });
+  } catch (error) {
+    addLog('error', 'Failed to reset platform statistics', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ElevenLabs webhook endpoint (route to the webhook handler) - UNCHANGED
 app.use('/api/booking/webhook', require('./api/booking/webhook'));
+
+// VAPI.ai webhook endpoint (new dual-platform support)
+app.use('/api/booking/vapi-webhook', require('./api/booking/vapi-webhook'));
 
 // Error handling middleware
 app.use((error, req, res, next) => {
