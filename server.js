@@ -34,9 +34,9 @@ function addLog(type, message, data = null, requestData = null, responseData = n
     timestamp: dayjs().tz(config.calendar.timeZone).format('YYYY-MM-DD HH:mm:ss'),
     type,
     message,
-    data,
-    requestData,
-    responseData
+    data: data || undefined,
+    requestData: requestData || undefined,
+    responseData: responseData || undefined
   };
   
   logs.unshift(log);
@@ -44,7 +44,9 @@ function addLog(type, message, data = null, requestData = null, responseData = n
     logs.pop();
   }
   
-  console.log(`[${log.timestamp}] ${type.toUpperCase()}: ${message}`);
+  // Clean console logging without undefined/null values
+  const dataStr = data ? ` - Data: ${JSON.stringify(data)}` : '';
+  console.log(`[${log.timestamp}] ${type.toUpperCase()}: ${message}${dataStr}`);
 }
 
 // Enhanced request logging middleware
@@ -656,9 +658,9 @@ app.get('/', async (req, res) => {
                                   log.type === 'warning' ? 'Warning: ' + log.message :
                                   log.type.toUpperCase() + ': ' + log.message}
                             </div>
-                            ${log.data ? 
+                            ${log.data && log.data !== 'undefined' && log.data !== 'null' ? 
                                 `<div style="font-size: 11px; color: #6b7280; margin-top: 6px; background: #f3f4f6; padding: 6px 8px; border-radius: 4px; border: 1px solid #e5e7eb;">
-                                    ${JSON.stringify(log.data)}
+                                    ${typeof log.data === 'string' ? log.data : JSON.stringify(log.data)}
                                 </div>` : ''
                             }
                         </div>
