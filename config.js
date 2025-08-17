@@ -1,4 +1,5 @@
 const path = require('path');
+const { smsConfig } = require('./sms-config');
 
 const config = {
   port: process.env.PORT || 3000,
@@ -15,7 +16,9 @@ const config = {
     enabled: process.env.TWILIO_ENABLED === 'true',
     accountSid: process.env.TWILIO_ACCOUNT_SID,
     authToken: process.env.TWILIO_AUTH_TOKEN,
-    phoneNumber: process.env.TWILIO_PHONE_NUMBER || '+12678638448'
+    phoneNumber: process.env.TWILIO_PHONE_NUMBER || '+12678638448',
+    // SMS templates are configured in sms-config.js
+    config: smsConfig
   },
   
   // Appointment Types Configuration
@@ -37,8 +40,7 @@ const config = {
         'Sports clothes and towel',
         'Cash payment required (130€)'
       ],
-      orderNumbers: false,
-      smsTemplate: 'Dobrý deň {patient_name}, Váš termín bol rezervovaný na {date_short} o {time}, cena 130€, nalačno, prineste jedlo/vodu, veci na prezlečenie. Rehacentrum Humenné'
+      orderNumbers: false
     },
     
     vstupne_vysetrenie: {
@@ -58,8 +60,7 @@ const config = {
         'Previous medical reports if available',
         'Insurance card'
       ],
-      orderNumbers: true,
-      smsTemplate: 'Dobrý deň {patient_name}, Váš termín bol rezervovaný na {date_short} o {time}, vstupné vyšetrenie, hradené poisťovňou. Vaše poradové číslo je {order_number}. Rehacentrum Humenné'
+      orderNumbers: true
     },
     
     kontrolne_vysetrenie: {
@@ -79,8 +80,7 @@ const config = {
         'Latest test results and medical reports',
         'Previous examination documentation'
       ],
-      orderNumbers: true,
-      smsTemplate: 'Dobrý deň {patient_name}, Váš termín bol rezervovaný na {date_short} o {time}, kontrolné vyšetrenie, hradené poisťovňou. Vaše poradové číslo je {order_number}. Rehacentrum Humenné'
+      orderNumbers: true
     },
     
     zdravotnicke_pomocky: {
@@ -100,8 +100,7 @@ const config = {
         'Old aids for inspection if applicable',
         'Insurance card'
       ],
-      orderNumbers: true,
-      smsTemplate: 'Dobrý deň {patient_name}, Váš termín bol rezervovaný na {date_short} o {time}, zdravotnícke pomôcky, hradené poisťovňou. Vaše poradové číslo je {order_number}. Rehacentrum Humenné'
+      orderNumbers: true
     },
     
     konzultacia: {
@@ -120,8 +119,7 @@ const config = {
         'Cash payment (30€)',
         'Medical documents if available'
       ],
-      orderNumbers: true,
-      smsTemplate: 'Dobrý deň {patient_name}, Váš termín bol rezervovaný na {date_short} o {time}, konzultácia, cena 30€. Vaše poradové číslo je {order_number}. Rehacentrum Humenné'
+      orderNumbers: true
     }
   },
   

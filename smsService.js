@@ -1,6 +1,7 @@
 const twilio = require('twilio');
 const dayjs = require('dayjs');
 const config = require('./config');
+const { formatSMSMessage, validateSMSMessage } = require('./sms-config');
 
 class SMSService {
   constructor() {
@@ -216,16 +217,13 @@ class SMSService {
   }
 
   formatAppointmentMessage(appointmentData) {
-    const typeConfig = config.appointmentTypes[appointmentData.appointmentType];
-    if (!typeConfig || !typeConfig.smsTemplate) {
-      return `Dobrý deň ${appointmentData.patientName}, Váš termín bol rezervovaný na ${appointmentData.dateShort} o ${appointmentData.time}. Rehacentrum Humenné`;
-    }
+    // Use external SMS configuration
+    return formatSMSMessage(appointmentData.appointmentType, appointmentData);
+  }
 
-    return typeConfig.smsTemplate
-      .replace('{patient_name}', appointmentData.patientName)
-      .replace('{date_short}', appointmentData.dateShort)
-      .replace('{time}', appointmentData.time)
-      .replace('{order_number}', appointmentData.orderNumber || 'N/A');
+  validateMessage(message) {
+    // Use external SMS validation
+    return validateSMSMessage(message);
   }
 
   getStatus() {

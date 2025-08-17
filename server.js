@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const dayjs = require('dayjs');
@@ -537,7 +538,7 @@ app.post('/api/appointments', async (req, res) => {
     if (smsService.getStatus().enabled) {
       const smsData = {
         ...eventData,
-        dateShort: dayjs(dateTime).format('D.M.'),
+        dateShort: dayjs(dateTime).format('D.M.YYYY'),
         time: dayjs(dateTime).format('HH:mm')
       };
       smsResult = await smsService.sendAppointmentConfirmation(smsData);
@@ -620,6 +621,71 @@ app.post('/api/sms/test', async (req, res) => {
     res.json(result);
   } catch (error) {
     addLog('error', 'SMS test failed', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// SMS template preview endpoint
+app.post('/api/sms/preview', async (req, res) => {
+  try {
+    const { appointmentType, patientName, dateTime, orderNumber } = req.body;
+    
+    const mockSmsData = {
+      appointmentType,
+      patientName: patientName || 'Jan Harmady',
+      dateShort: dayjs(dateTime || '2025-08-18T15:30:00+02:00').format('D.M.YYYY'),
+      time: dayjs(dateTime || '2025-08-18T15:30:00+02:00').format('HH:mm'),
+      orderNumber: orderNumber || '42'
+    };
+    
+    const formattedMessage = smsService.formatAppointmentMessage(mockSmsData);
+    const validation = smsService.validateMessage(formattedMessage);
+    
+    res.json({
+      appointmentType,
+      formattedMessage,
+      smsData: mockSmsData,
+      validation
+    });
+  } catch (error) {
+    addLog('error', 'SMS preview failed', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// SMS templates management endpoint
+app.get('/api/sms/templates', (req, res) => {
+  try {
+    const { smsConfig } = require('./sms-config');
+    
+    // Get all templates with sample previews
+    const templates = {};
+    Object.keys(smsConfig.templates).forEach(type => {
+      const mockData = {
+        appointmentType: type,
+        patientName: 'Jan Harmady',
+        dateShort: '18.8.2025',
+        time: '15:30',
+        orderNumber: '42'
+      };
+      
+      const formattedMessage = smsService.formatAppointmentMessage(mockData);
+      const validation = smsService.validateMessage(formattedMessage);
+      
+      templates[type] = {
+        ...smsConfig.templates[type],
+        preview: formattedMessage,
+        validation
+      };
+    });
+    
+    res.json({
+      templates,
+      settings: smsConfig.settings,
+      notifications: smsConfig.notifications
+    });
+  } catch (error) {
+    addLog('error', 'Failed to get SMS templates', error.message);
     res.status(500).json({ error: error.message });
   }
 });
