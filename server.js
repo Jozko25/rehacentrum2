@@ -253,18 +253,30 @@ app.get('/', (req, res) => {
 
 // Admin Login Page
 app.get('/admin', checkIPWhitelist, (req, res) => {
+  console.log('🔍 Admin login page requested');
+  
   // Check if already authenticated
   const token = req.query.token;
   if (token && adminSessions.has(token)) {
     const session = adminSessions.get(token);
     if (Date.now() < session.expires) {
-      // Redirect to dashboard
+      console.log('✅ Valid token found, redirecting to dashboard');
       return res.redirect('/admin/dashboard?token=' + token);
     }
   }
   
+  console.log('📄 Serving admin login page');
   // Serve login page
-  res.sendFile('admin-login.html', { root: './public' });
+  const path = require('path');
+  const filePath = path.join(__dirname, 'public', 'admin-login.html');
+  console.log('📂 File path:', filePath);
+  
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('❌ Error serving admin login page:', err);
+      res.status(500).json({ error: 'Failed to load login page', details: err.message });
+    }
+  });
 });
 
 // Admin Login API
