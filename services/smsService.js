@@ -13,8 +13,11 @@ class SMSService {
   }
 
   async initialize() {
+    // Re-check environment variable
+    this.enabled = process.env.TWILIO_ENABLED === 'true';
+    
     if (!this.enabled) {
-      console.log('SMS service is disabled (TWILIO_ENABLED=false)');
+      console.log(`SMS service is disabled (TWILIO_ENABLED=${process.env.TWILIO_ENABLED})`);
       return false;
     }
 
@@ -41,6 +44,9 @@ class SMSService {
   }
 
   async ensureInitialized() {
+    // Re-check environment variable
+    this.enabled = process.env.TWILIO_ENABLED === 'true';
+    
     if (!this.initialized && this.enabled) {
       await this.initialize();
     }
