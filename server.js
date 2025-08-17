@@ -148,8 +148,109 @@ app.get('/health', async (req, res) => {
   });
 });
 
-// Dashboard endpoint
-app.get('/', async (req, res) => {
+// Admin Security Middleware
+const adminSecurity = (req, res, next) => {
+  // Get client IP (handle various proxy scenarios)
+  const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+                   req.headers['x-real-ip'] ||
+                   req.connection.remoteAddress ||
+                   req.socket.remoteAddress ||
+                   (req.connection.socket ? req.connection.socket.remoteAddress : null);
+
+  console.log(`🔍 Admin access attempt from IP: ${clientIP}`);
+
+  // IP Whitelist (support for multiple networks)
+  const allowedIPs = (process.env.ADMIN_ALLOWED_IPS || '').split(',').map(ip => ip.trim()).filter(Boolean);
+  const allowedNetworks = (process.env.ADMIN_ALLOWED_NETWORKS || '').split(',').map(network => network.trim()).filter(Boolean);
+  
+  // Check exact IP match
+  const isIPAllowed = allowedIPs.length === 0 || allowedIPs.includes(clientIP);
+  
+  // Check network ranges (simple CIDR-like checking)
+  const isNetworkAllowed = allowedNetworks.length === 0 || allowedNetworks.some(network => {
+    if (network.includes('/')) {
+      // CIDR notation (basic implementation)
+      const [baseIP, mask] = network.split('/');
+      const maskBits = parseInt(mask);
+      // Simple implementation - you could enhance this
+      return clientIP.startsWith(baseIP.split('.').slice(0, Math.floor(maskBits / 8)).join('.'));
+    } else {
+      // Network prefix
+      return clientIP.startsWith(network);
+    }
+  });
+
+  if (!isIPAllowed && !isNetworkAllowed && allowedIPs.length > 0) {
+    console.log(`❌ IP ${clientIP} not in whitelist: ${allowedIPs.join(', ')}`);
+    return res.status(403).json({ 
+      error: 'Access denied', 
+      message: 'Your IP address is not authorized to access this admin panel',
+      clientIP: clientIP
+    });
+  }
+
+  // HTTP Basic Authentication
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith('Basic ')) {
+    res.set('WWW-Authenticate', 'Basic realm="Rehacentrum Admin Panel"');
+    return res.status(401).json({ 
+      error: 'Authentication required',
+      message: 'Please provide admin credentials'
+    });
+  }
+
+  try {
+    const credentials = Buffer.from(auth.slice(6), 'base64').toString();
+    const [username, password] = credentials.split(':');
+
+    // Get admin credentials from environment
+    const adminUsername = process.env.ADMIN_USERNAME;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminUsername || !adminPassword) {
+      console.error('❌ Admin credentials not configured in environment');
+      return res.status(500).json({ 
+        error: 'Server configuration error',
+        message: 'Admin authentication not properly configured'
+      });
+    }
+
+    if (username === adminUsername && password === adminPassword) {
+      console.log(`✅ Admin authentication successful for user: ${username} from IP: ${clientIP}`);
+      addLog('admin', `Admin panel accessed by ${username} from ${clientIP}`);
+      next();
+    } else {
+      console.log(`❌ Invalid admin credentials for user: ${username} from IP: ${clientIP}`);
+      addLog('warning', `Failed admin login attempt: ${username} from ${clientIP}`);
+      res.set('WWW-Authenticate', 'Basic realm="Rehacentrum Admin Panel"');
+      return res.status(401).json({ 
+        error: 'Invalid credentials',
+        message: 'Username or password is incorrect'
+      });
+    }
+  } catch (error) {
+    console.error('❌ Auth parsing error:', error);
+    return res.status(400).json({ 
+      error: 'Invalid authentication format'
+    });
+  }
+};
+
+// Root endpoint - simple status (no sensitive info)
+app.get('/', (req, res) => {
+  res.json({
+    service: 'Rehacentrum API',
+    status: 'Online',
+    message: 'Healthcare appointment booking system is operational',
+    version: '1.0.2',
+    timestamp: dayjs().tz(config.calendar.timeZone).format(),
+    admin: '/admin',
+    docs: 'https://docs.rehacentrum.sk'
+  });
+});
+
+// Protected Admin Dashboard
+app.get('/admin', adminSecurity, async (req, res) => {
   // Ensure services are initialized for dashboard
   if (!googleCalendar.initialized) {
     try {
@@ -742,8 +843,24 @@ app.get('/', async (req, res) => {
   res.send(html);
 });
 
-// Log management endpoints
-app.get('/api/logs', (req, res) => {
+// IP Detection endpoint (for easy whitelist setup)
+app.get('/my-ip', (req, res) => {
+  const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+                   req.headers['x-real-ip'] ||
+                   req.connection.remoteAddress ||
+                   req.socket.remoteAddress ||
+                   (req.connection.socket ? req.connection.socket.remoteAddress : null);
+  
+  res.json({
+    ip: clientIP,
+    message: 'Your current IP address',
+    userAgent: req.headers['user-agent'],
+    timestamp: dayjs().tz(config.calendar.timeZone).format()
+  });
+});
+
+// Protected Log management endpoints
+app.get('/api/logs', adminSecurity, (req, res) => {
   const { type, limit = 100 } = req.query;
   let filteredLogs = logs;
   
@@ -754,14 +871,14 @@ app.get('/api/logs', (req, res) => {
   res.json(filteredLogs.slice(0, parseInt(limit)));
 });
 
-app.delete('/api/logs', (req, res) => {
+app.delete('/api/logs', adminSecurity, (req, res) => {
   logs.length = 0;
   addLog('success', 'Logs cleared');
   res.json({ message: 'Logs cleared successfully' });
 });
 
-// Delete all events for a specific date
-app.delete('/api/events/:date', async (req, res) => {
+// Delete all events for a specific date (admin only)
+app.delete('/api/events/:date', adminSecurity, async (req, res) => {
   try {
     const { date } = req.params;
     
