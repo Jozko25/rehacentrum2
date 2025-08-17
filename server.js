@@ -150,80 +150,469 @@ app.get('/', async (req, res) => {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Rehacentrum API Dashboard</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
-            body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
-            .container { max-width: 100%; margin: 0; padding: 20px; }
-            .header { background: #2c3e50; color: white; padding: 20px; margin-bottom: 20px; }
-            .basic-info { display: flex; gap: 20px; margin-bottom: 20px; align-items: center; }
-            .basic-info-item { background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-            .basic-info-item strong { display: block; margin-bottom: 5px; }
-            .log-containers { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: calc(100vh - 200px); }
-            .log-container { background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 100%; overflow-y: auto; }
-            .log-container h4 { margin: 0 0 10px 0; color: #333; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-            .log-entry { padding: 8px 10px; margin-bottom: 5px; border-radius: 4px; font-family: monospace; font-size: 11px; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
-            .log-entry:hover { border-color: #007bff; transform: translateY(-1px); }
-            .log-booking { background: #e8f5e8; border-left: 3px solid #28a745; }
-            .log-api { background: #f0f8ff; border-left: 3px solid #007bff; }
-            .log-webhook { background: #fff5e6; border-left: 3px solid #fd7e14; }
-            .log-error { background: #ffe6e6; border-left: 3px solid #dc3545; }
-            .log-warning { background: #fff3cd; border-left: 3px solid #ffc107; }
-            .log-success { background: #d4edda; border-left: 3px solid #28a745; }
-            .log-details { display: none; margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6; }
-            .log-details pre { margin: 0; font-size: 10px; overflow-x: auto; max-height: 200px; }
-            .log-header { display: flex; justify-content: space-between; align-items: center; }
-            .log-expand { font-weight: bold; color: #007bff; }
-            .log-tabs { display: flex; gap: 5px; margin-bottom: 8px; }
-            .log-tab { padding: 3px 8px; background: #e9ecef; cursor: pointer; border-radius: 3px; font-size: 9px; }
-            .log-tab.active { background: #007bff; color: white; }
-            .log-time { font-size: 10px; color: #6c757d; }
-            .log-path { font-weight: bold; color: #495057; }
-            .controls { margin-bottom: 20px; }
-            button { padding: 10px 20px; margin-right: 10px; border: none; border-radius: 4px; cursor: pointer; }
-            .btn-primary { background: #007bff; color: white; }
-            .btn-danger { background: #dc3545; color: white; }
-            .filter { margin-bottom: 10px; }
-            select { padding: 8px; border-radius: 4px; border: 1px solid #ddd; }
+            /* Enterprise-Grade CSS Reset and Base Styles */
+            * { box-sizing: border-box; }
+            body { 
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
+                margin: 0; 
+                padding: 0; 
+                background: #f8fafc; 
+                color: #1e293b;
+                line-height: 1.6;
+                font-weight: 400;
+            }
+            
+            /* Container and Layout */
+            .container { 
+                max-width: 1600px; 
+                margin: 0 auto; 
+                padding: 32px; 
+            }
+            
+            /* Header Section - Enterprise Style */
+            .header { 
+                background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+                color: white; 
+                padding: 40px 32px; 
+                margin: -32px -32px 40px -32px;
+                border-bottom: 1px solid #334155;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            }
+            
+            .header h1 { 
+                margin: 0 0 12px 0; 
+                font-size: 32px; 
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                letter-spacing: -0.025em;
+            }
+            
+            .header p { 
+                margin: 0; 
+                opacity: 0.8; 
+                font-size: 15px;
+                font-weight: 400;
+                color: #cbd5e1;
+            }
+            
+            /* Status Cards - Professional Design */
+            .basic-info { 
+                display: grid; 
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 24px; 
+                margin-bottom: 40px; 
+            }
+            
+            .basic-info-item { 
+                background: white; 
+                padding: 28px; 
+                border-radius: 8px; 
+                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                border: 1px solid #e2e8f0;
+                transition: all 0.15s ease;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .basic-info-item::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            }
+            
+            .basic-info-item:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                border-color: #cbd5e1;
+            }
+            
+            .basic-info-item strong { 
+                display: block; 
+                margin-bottom: 12px; 
+                font-size: 13px;
+                font-weight: 600;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+            
+            .basic-info-item span {
+                font-size: 18px;
+                font-weight: 600;
+                color: #0f172a;
+            }
+            
+            /* Control Buttons - Enterprise Style */
+            .controls { 
+                margin-bottom: 32px; 
+                display: flex;
+                gap: 16px;
+                flex-wrap: wrap;
+                align-items: center;
+            }
+            
+            button { 
+                padding: 12px 24px; 
+                border: 1px solid transparent;
+                border-radius: 6px; 
+                cursor: pointer; 
+                font-weight: 500;
+                font-size: 14px;
+                transition: all 0.15s ease;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                min-height: 44px;
+            }
+            
+            button:hover {
+                transform: translateY(-1px);
+            }
+            
+            .btn-primary { 
+                background: #3b82f6; 
+                color: white; 
+                border-color: #3b82f6;
+            }
+            
+            .btn-primary:hover { 
+                background: #2563eb;
+                border-color: #2563eb;
+                box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+            }
+            
+            .btn-danger { 
+                background: #dc2626; 
+                color: white; 
+                border-color: #dc2626;
+            }
+            
+            .btn-danger:hover { 
+                background: #b91c1c;
+                border-color: #b91c1c;
+                box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.3);
+            }
+            
+            /* Log Containers - Professional Layout */
+            .log-containers { 
+                display: grid; 
+                grid-template-columns: 1fr 1fr; 
+                gap: 32px; 
+                height: calc(100vh - 320px); 
+            }
+            
+            .log-container { 
+                background: white; 
+                border-radius: 8px; 
+                padding: 24px; 
+                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                border: 1px solid #e2e8f0;
+                height: 100%; 
+                overflow-y: auto; 
+            }
+            
+            .log-container h4 { 
+                margin: 0 0 24px 0; 
+                color: #0f172a; 
+                font-size: 18px; 
+                font-weight: 600;
+                border-bottom: 1px solid #e2e8f0; 
+                padding-bottom: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            
+            /* Log Entries - Enterprise Style */
+            .log-entry { 
+                padding: 16px 20px; 
+                margin-bottom: 12px; 
+                border-radius: 6px; 
+                font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace; 
+                font-size: 13px; 
+                cursor: pointer; 
+                transition: all 0.15s ease; 
+                border: 1px solid transparent; 
+                position: relative;
+                background: #f8fafc;
+            }
+            
+            .log-entry:hover { 
+                border-color: #cbd5e1; 
+                transform: translateY(-1px);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                background: white;
+            }
+            
+            .log-booking { border-left: 4px solid #10b981; }
+            .log-api { border-left: 4px solid #3b82f6; }
+            .log-webhook { border-left: 4px solid #f59e0b; }
+            .log-error { border-left: 4px solid #ef4444; }
+            .log-warning { border-left: 4px solid #f59e0b; }
+            .log-success { border-left: 4px solid #10b981; }
+            
+            /* Log Details - Professional */
+            .log-details { 
+                display: none; 
+                margin-top: 16px; 
+                padding: 20px; 
+                background: #f8fafc; 
+                border-radius: 6px; 
+                border: 1px solid #e2e8f0; 
+            }
+            
+            .log-details pre { 
+                margin: 0; 
+                font-size: 12px; 
+                overflow-x: auto; 
+                max-height: 200px;
+                background: #0f172a;
+                color: #e2e8f0;
+                padding: 16px;
+                border-radius: 6px;
+                border: 1px solid #334155;
+                font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+            }
+            
+            .log-header { 
+                display: flex; 
+                justify-content: space-between; 
+                align-items: flex-start; 
+            }
+            
+            .log-expand { 
+                font-weight: 600; 
+                color: #3b82f6; 
+                font-size: 16px;
+                width: 28px;
+                height: 28px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 6px;
+                transition: all 0.15s ease;
+                background: #eff6ff;
+                border: 1px solid #dbeafe;
+            }
+            
+            .log-expand:hover {
+                background: #dbeafe;
+                border-color: #3b82f6;
+            }
+            
+            /* Tabs - Enterprise Style */
+            .log-tabs { 
+                display: flex; 
+                gap: 0; 
+                margin-bottom: 16px; 
+                border-bottom: 1px solid #e2e8f0;
+            }
+            
+            .log-tab { 
+                padding: 12px 20px; 
+                background: transparent; 
+                cursor: pointer; 
+                border-radius: 0; 
+                font-size: 13px; 
+                font-weight: 500;
+                transition: all 0.15s ease;
+                border: none;
+                border-bottom: 2px solid transparent;
+                color: #64748b;
+            }
+            
+            .log-tab:hover {
+                color: #3b82f6;
+                background: #f8fafc;
+            }
+            
+            .log-tab.active { 
+                color: #3b82f6; 
+                border-bottom-color: #3b82f6;
+                background: #f8fafc;
+            }
+            
+            .log-time { 
+                font-size: 12px; 
+                color: #64748b; 
+                font-weight: 500;
+                margin-bottom: 6px;
+                font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+            }
+            
+            .log-path { 
+                font-weight: 600; 
+                color: #0f172a; 
+                font-size: 14px;
+                line-height: 1.4;
+            }
+            
+            /* Status Indicators */
+            .status-indicator {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 14px;
+                font-weight: 500;
+            }
+            
+            .status-indicator::before {
+                content: '';
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                display: inline-block;
+            }
+            
+            .status-success::before { background: #10b981; }
+            .status-error::before { background: #ef4444; }
+            .status-warning::before { background: #f59e0b; }
+            .status-info::before { background: #3b82f6; }
+            
+            /* Responsive Design */
+            @media (max-width: 1200px) {
+                .log-containers {
+                    grid-template-columns: 1fr;
+                    height: auto;
+                }
+            }
+            
+            @media (max-width: 768px) {
+                .container {
+                    padding: 20px;
+                }
+                
+                .header {
+                    padding: 32px 20px;
+                    margin: -20px -20px 32px -20px;
+                }
+                
+                .basic-info {
+                    grid-template-columns: 1fr;
+                }
+                
+                .controls {
+                    flex-direction: column;
+                }
+                
+                button {
+                    width: 100%;
+                    justify-content: center;
+                }
+            }
+            
+            /* Scrollbar Styling - Professional */
+            .log-container::-webkit-scrollbar {
+                width: 8px;
+            }
+            
+            .log-container::-webkit-scrollbar-track {
+                background: #f1f5f9;
+                border-radius: 4px;
+            }
+            
+            .log-container::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 4px;
+                border: 1px solid #f1f5f9;
+            }
+            
+            .log-container::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+            }
         </style>
     </head>
     <body>
         <div class="container">
             <div class="header">
-                <h1>🏥 Rehacentrum API Dashboard</h1>
-                <p>Real-time monitoring | Last updated: <span id="lastUpdate">${dayjs().tz(config.calendar.timeZone).format('YYYY-MM-DD HH:mm:ss')}</span></p>
+                <h1>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 16px;">
+                        <path d="M19 3H5C3.89 3 3 3.89 3 5V19C3 20.11 3.89 21 5 21H19C20.11 21 21 20.11 21 19V5C21 3.89 20.11 3 19 3ZM19 19H5V5H19V19Z" fill="currentColor"/>
+                        <path d="M7 7H17V9H7V7ZM7 11H17V13H7V11ZM7 15H14V17H7V15Z" fill="currentColor"/>
+                    </svg>
+                    Rehacentrum API Dashboard
+                </h1>
+                <p>Enterprise monitoring & system health dashboard | Last updated: <span id="lastUpdate" style="font-weight: 600; color: #fbbf24;">${dayjs().tz(config.calendar.timeZone).format('YYYY-MM-DD HH:mm:ss')}</span></p>
             </div>
 
             <div class="basic-info">
                 <div class="basic-info-item">
-                    <strong>Calendar</strong>
-                    <span style="color: ${googleCalendar.initialized ? 'green' : 'red'}">${googleCalendar.initialized ? '✓ Connected' : '✗ Disconnected'}</span>
+                    <strong>Calendar Status</strong>
+                    <span class="status-indicator ${googleCalendar.initialized ? 'status-success' : 'status-error'}">
+                        ${googleCalendar.initialized ? 'Connected & Ready' : 'Disconnected'}
+                    </span>
                 </div>
                 
                 <div class="basic-info-item">
                     <strong>SMS Service</strong>
-                    <span style="color: ${smsService.getStatus().enabled ? 'green' : 'orange'}">${smsService.getStatus().enabled ? '✓ Enabled' : '⚠ Disabled'}</span>
+                    <span class="status-indicator ${smsService.getStatus().enabled ? 'status-success' : 'status-warning'}">
+                        ${smsService.getStatus().enabled ? 'Enabled & Active' : 'Disabled'}
+                    </span>
                 </div>
                 
                 <div class="basic-info-item">
                     <strong>Activity Logs</strong>
-                    <span>${logs.length} entries</span>
+                    <span class="status-indicator status-info">${logs.length} entries</span>
+                </div>
+                
+                <div class="basic-info-item">
+                    <strong>Server Time</strong>
+                    <span style="color: #64748b; font-size: 18px; font-weight: 600;">${dayjs().tz(config.calendar.timeZone).format('HH:mm:ss')}</span>
                 </div>
             </div>
 
             <div class="controls">
-                <button class="btn-primary" onclick="refreshLogs()">🔄 Refresh</button>
-                <button class="btn-danger" onclick="clearLogs()">🗑️ Clear Logs</button>
+                <button class="btn-primary" onclick="refreshLogs()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4.01 7.58 4.01 12C4.01 16.42 7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.83 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12C6 8.69 8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z" fill="currentColor"/>
+                    </svg>
+                    Refresh Dashboard
+                </button>
+                <button class="btn-danger" onclick="clearLogs()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19V7H6V19ZM8 9H16V19H8V9ZM15.5 4L14.5 3H9.5L8.5 4H5V6H19V4H15.5Z" fill="currentColor"/>
+                    </svg>
+                    Clear All Logs
+                </button>
             </div>
 
             <div class="log-containers">
                 <!-- API & Webhook Container -->
                 <div class="log-container">
-                    <h4>🔌 API Endpoints & Webhooks</h4>
+                    <h4>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
+                            <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V21C3 22.11 3.89 23 5 23H19C20.11 23 21 22.11 21 21V9ZM19 21H5V3H13V9H19V21Z" fill="currentColor"/>
+                        </svg>
+                        API Endpoints & Webhooks
+                        <span style="margin-left: auto; font-size: 12px; color: #64748b; font-weight: 400;">
+                            ${logs.filter(log => log.type === 'api' || log.type === 'webhook').length} entries
+                        </span>
+                    </h4>
                     ${logs.filter(log => log.type === 'api' || log.type === 'webhook').slice(0, 20).map(log => `
                         <div class="log-entry log-${log.type}" onclick="toggleLogDetails('${log.id}', event)">
                             <div class="log-header">
-                                <div>
+                                <div style="flex: 1;">
                                     <div class="log-time">${log.timestamp.split(' ')[1]}</div>
-                                    <div class="log-path">${log.type === 'webhook' ? '🤖 ' + (log.requestData?.body?.action || 'webhook') : log.requestData?.method + ' ' + log.requestData?.path}</div>
+                                    <div class="log-path">
+                                        ${log.type === 'webhook' ? 'Webhook: ' + (log.requestData?.body?.action || 'webhook') : 
+                                          log.requestData?.method + ' ' + log.requestData?.path}
+                                    </div>
+                                    ${log.responseData?.statusCode ? 
+                                        '<div style="font-size: 11px; color: #6b7280; margin-top: 4px;">' +
+                                        'Status: <span style="color: ' + (log.responseData.statusCode < 400 ? '#22c55e' : '#ef4444') + '; font-weight: 600;">' +
+                                        log.responseData.statusCode +
+                                        '</span> (' + (log.responseData.duration || 'N/A') + ')</div>' : ''
+                                    }
                                 </div>
                                 <span class="log-expand">+</span>
                             </div>
@@ -241,20 +630,42 @@ app.get('/', async (req, res) => {
                             </div>
                         </div>
                     `).join('')}
-                    ${logs.filter(log => log.type === 'api' || log.type === 'webhook').length === 0 ? '<div style="color: #6c757d; font-style: italic; font-size: 12px;">No API calls or webhooks yet</div>' : ''}
+                    ${logs.filter(log => log.type === 'api' || log.type === 'webhook').length === 0 ? 
+                        '<div style="color: #64748b; font-style: italic; font-size: 13px; text-align: center; padding: 40px 20px; background: #f8fafc; border-radius: 8px; border: 2px dashed #cbd5e1;"><div style="font-size: 14px; margin-bottom: 8px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">No Data Available</div>No API calls or webhooks recorded yet</div>' : ''
+                    }
                 </div>
 
                 <!-- System & Bookings Container -->
                 <div class="log-container">
-                    <h4>📅 Bookings & System Events</h4>
+                    <h4>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
+                            <path d="M19 3H5C3.89 3 3 3.89 3 5V19C3 20.11 3.89 21 5 21H19C20.11 21 21 20.11 21 19V5C21 3.89 20.11 3 19 3ZM19 19H5V5H19V19ZM7 7H17V9H7V7ZM7 11H17V13H7V11ZM7 15H14V17H7V15Z" fill="currentColor"/>
+                        </svg>
+                        Bookings & System Events
+                        <span style="margin-left: auto; font-size: 12px; color: #64748b; font-weight: 400;">
+                            ${logs.filter(log => log.type === 'booking' || ['success', 'warning', 'error'].includes(log.type)).length} entries
+                        </span>
+                    </h4>
                     ${logs.filter(log => log.type === 'booking' || ['success', 'warning', 'error'].includes(log.type)).slice(0, 20).map(log => `
                         <div class="log-entry log-${log.type}">
                             <div class="log-time">${log.timestamp.split(' ')[1]}</div>
-                            <div class="log-path">${log.type === 'booking' ? '📅 ' + log.message : log.type.toUpperCase() + ': ' + log.message}</div>
-                            ${log.data ? `<div style="font-size: 10px; color: #6c757d; margin-top: 3px;">${JSON.stringify(log.data)}</div>` : ''}
+                            <div class="log-path">
+                                ${log.type === 'booking' ? 'Booking: ' + log.message : 
+                                  log.type === 'success' ? 'Success: ' + log.message :
+                                  log.type === 'error' ? 'Error: ' + log.message :
+                                  log.type === 'warning' ? 'Warning: ' + log.message :
+                                  log.type.toUpperCase() + ': ' + log.message}
+                            </div>
+                            ${log.data ? 
+                                `<div style="font-size: 11px; color: #6b7280; margin-top: 6px; background: #f3f4f6; padding: 6px 8px; border-radius: 4px; border: 1px solid #e5e7eb;">
+                                    ${JSON.stringify(log.data)}
+                                </div>` : ''
+                            }
                         </div>
                     `).join('')}
-                    ${logs.filter(log => log.type === 'booking' || ['success', 'warning', 'error'].includes(log.type)).length === 0 ? '<div style="color: #6c757d; font-style: italic; font-size: 12px;">No bookings or system events yet</div>' : ''}
+                    ${logs.filter(log => log.type === 'booking' || ['success', 'warning', 'error'].includes(log.type)).length === 0 ? 
+                        '<div style="color: #64748b; font-style: italic; font-size: 13px; text-align: center; padding: 40px 20px; background: #f8fafc; border-radius: 8px; border: 2px dashed #cbd5e1;"><div style="font-size: 14px; margin-bottom: 8px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">No Data Available</div>No bookings or system events recorded yet</div>' : ''
+                    }
                 </div>
             </div>
         </div>
