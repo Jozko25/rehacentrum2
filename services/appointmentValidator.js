@@ -181,14 +181,30 @@ class AppointmentValidator {
   async validateDailyLimit(date, appointmentType) {
     const typeConfig = config.appointmentTypes[appointmentType];
     const events = await googleCalendar.getEventsForDay(date);
-    const typeEvents = events.filter(event => 
-      event.summary && event.summary.includes(appointmentType.toUpperCase())
-    );
+    
+    // Filter events by the actual Slovak appointment name that appears in calendar summaries
+    // Event summaries are formatted as: "Appointment Name - Patient Name"
+    const typeEvents = events.filter(event => {
+      if (!event.summary) return false;
+      
+      // Check if the event summary starts with the Slovak appointment type name
+      return event.summary.startsWith(typeConfig.name + ' -') || 
+             event.summary.includes(typeConfig.name);
+    });
+    
+    console.log(`🔍 Daily limit check for ${appointmentType} (${typeConfig.name}):`, {
+      date,
+      totalEvents: events.length,
+      filteredEvents: typeEvents.length,
+      limit: typeConfig.dailyLimit,
+      eventSummaries: events.map(e => e.summary),
+      matchedEvents: typeEvents.map(e => e.summary)
+    });
     
     if (typeEvents.length >= typeConfig.dailyLimit) {
       return { 
         isValid: false, 
-        error: `Daily limit reached for ${typeConfig.name} (${typeConfig.dailyLimit} appointments per day)`,
+        error: `Denný limit bol dosiahnutý pre ${typeConfig.name} (${typeConfig.dailyLimit} termínov za deň). Skúste iný deň.`,
         currentCount: typeEvents.length,
         limit: typeConfig.dailyLimit
       };
