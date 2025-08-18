@@ -25,7 +25,7 @@ async function handleGetMoreSlots(parameters) {
   if (!date || !appointment_type) {
     return {
       success: false,
-      message: "Došla k chybe"
+      message: "Došlo k chybe"
     };
   }
 
@@ -34,7 +34,7 @@ async function handleGetMoreSlots(parameters) {
     if (!typeValidation.isValid) {
       return {
         success: false,
-        message: "Došla k chybe"
+        message: "Došlo k chybe"
       };
     }
 
@@ -78,7 +78,7 @@ async function handleGetMoreSlots(parameters) {
   } catch (error) {
     return {
       success: false,
-      message: "Došla k chybe"
+      message: "Došlo k chybe"
     };
   }
 }
@@ -138,7 +138,7 @@ async function handleGetAvailableSlots(parameters) {
   if (!date || !appointment_type) {
     return {
       success: false,
-      message: "Došla k chybe"
+      message: "Došlo k chybe"
     };
   }
 
@@ -147,7 +147,7 @@ async function handleGetAvailableSlots(parameters) {
     if (!typeValidation.isValid) {
       return {
         success: false,
-        message: "Došla k chybe"
+        message: "Došlo k chybe"
       };
     }
 
@@ -217,7 +217,7 @@ async function handleGetAvailableSlots(parameters) {
   } catch (error) {
     return {
       success: false,
-      message: "Došla k chybe"
+      message: "Došlo k chybe"
     };
   }
 }
@@ -287,7 +287,7 @@ async function handleFindClosestSlot(parameters) {
   } catch (error) {
     return {
       success: false,
-      message: "Došla k chybe"
+      message: "Došlo k chybe"
     };
   }
 }
@@ -426,7 +426,7 @@ async function handleBookAppointment(parameters) {
       
       // Add specific requirements based on appointment type
       if (appointment_type === 'sportova_prehliadka') {
-        successMessage += ' DÔLEŽITÉ: Prísť nalačno (8 hodín), prineste si jedlo a vodu po vyšetrení, športové oblečenie a uterák.';
+        successMessage += ' DÔLEŽITÉ: Prísť nalačno, prineste si jedlo a vodu po vyšetrení, športové oblečenie a uterák.';
       } else if (appointment_type === 'konzultacia') {
         successMessage += ' Platba hotovosťou.';
       }
@@ -444,7 +444,7 @@ async function handleBookAppointment(parameters) {
   } catch (error) {
     return {
       success: false,
-      message: "Došla k chybe"
+      message: "Došlo k chybe"
     };
   }
 }
@@ -505,7 +505,7 @@ async function handleCancelAppointment(parameters) {
     
     return {
       success: true,
-      message: `Termín bol úspešne zrušený. ${patient_name} mal objednaný termín na ${formattedDate} o ${formattedTime}.${smsText}`
+      message: `Termín bol úspešne zrušený.`
     };
   } catch (error) {
     return {
@@ -696,7 +696,7 @@ async function handleSendFallbackSms(parameters) {
       success: result.success,
       message: result.success ? 
         `SMS správa bola úspešne odoslaná na číslo ${phone}.` : 
-        `SMS sa nepodarilo odoslať na číslo ${phone}. ${result.reason || 'Skúste to prosím znovu.'}`
+        `SMS sa nepodarilo odoslať na číslo ${phone}`
     };
   } catch (error) {
     return {

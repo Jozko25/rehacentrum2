@@ -33,7 +33,7 @@ const config = {
       price: 130,
       currency: 'EUR',
       insurance: false,
-      color: '11',
+      color: '11', // Red for sports
       requirements: [
         'Fasting (8 hours before examination)',
         'Bring food and water for after examination',
@@ -54,7 +54,7 @@ const config = {
       price: 0,
       currency: 'EUR',
       insurance: true,
-      color: '1',
+      color: '1', // Blue for vstupne_vysetrenie
       requirements: [
         'Referral slip (mandatory)',
         'Previous medical reports if available',
@@ -74,7 +74,7 @@ const config = {
       price: 0,
       currency: 'EUR',
       insurance: true,
-      color: '2',
+      color: '1', // Blue for kontrolne_vysetrenie
       requirements: [
         'Insurance card',
         'Latest test results and medical reports',
@@ -94,7 +94,7 @@ const config = {
       price: 0,
       currency: 'EUR',
       insurance: true,
-      color: '3',
+      color: '1', // Blue for zdravotnicke_pomocky
       requirements: [
         'Medical reports',
         'Old aids for inspection if applicable',
@@ -114,7 +114,7 @@ const config = {
       price: 30,
       currency: 'EUR',
       insurance: false,
-      color: '4',
+      color: '1', // Blue for konzultacia
       requirements: [
         'Cash payment (30€)',
         'Medical documents if available'
