@@ -132,7 +132,20 @@ const config = {
     },
     vacationKeyword: 'DOVOLENKA',
     minAdvanceBooking: 1, // hours
-    maxAdvanceBooking: 30 // days
+    maxAdvanceBooking: 30, // days
+    
+    // Hourly patient limits for ordinary hours
+    hourlyLimits: {
+      enabled: true,
+      maxPatientsPerHour: 6,
+      applicableHours: [
+        { start: '09:00', end: '11:30' }, // Morning ordinary hours
+        { start: '13:00', end: '15:00' }  // Afternoon ordinary hours
+      ],
+      // Exclude specific appointment types from hourly limits
+      excludedTypes: ['sportova_prehliadka', 'konzultacia'],
+      orientativeTimePhrase: 'čas je orientačný'
+    }
   },
   
   // Patient Data Validation

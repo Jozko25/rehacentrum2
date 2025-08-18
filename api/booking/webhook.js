@@ -420,6 +420,18 @@ async function handleBookAppointment(parameters) {
       successMessage += ` Poradové číslo: ${orderNumber}.`;
     }
     
+    // Add "čas je orientačný" for ordinary appointments (during ordinary hours)
+    const appointmentTime = dayjs(date_time);
+    const isOrdinaryHours = config.businessRules.hourlyLimits.applicableHours.some(timeRange => {
+      const rangeStart = dayjs(`${appointmentTime.format('YYYY-MM-DD')} ${timeRange.start}`, 'YYYY-MM-DD HH:mm');
+      const rangeEnd = dayjs(`${appointmentTime.format('YYYY-MM-DD')} ${timeRange.end}`, 'YYYY-MM-DD HH:mm');
+      return appointmentTime.isBetween(rangeStart, rangeEnd, null, '[)');
+    });
+    
+    if (isOrdinaryHours && !config.businessRules.hourlyLimits.excludedTypes.includes(appointment_type)) {
+      successMessage += ` ${config.businessRules.hourlyLimits.orientativeTimePhrase}.`;
+    }
+    
     // Add price and requirements for paid appointments
     if (typeConfig.price > 0) {
       successMessage += ` Cena: ${typeConfig.price}€.`;
