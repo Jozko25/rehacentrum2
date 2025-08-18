@@ -450,7 +450,7 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
       const endTime = dayjs(`${date} ${schedule.end}`, 'YYYY-MM-DD HH:mm', config.calendar.timeZone);
       console.log(`🕐 Start time: ${currentTime.format('HH:mm')}, End time: ${endTime.format('HH:mm')}`);
 
-      // Generate slots with both predefined intervals AND every 10-minute slot
+      // Generate slots according to proper intervals
       const allPossibleTimes = new Set();
       
       // Add predefined interval slots
@@ -458,13 +458,6 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
       while (intervalTime.isBefore(endTime)) {
         allPossibleTimes.add(intervalTime.format('HH:mm'));
         intervalTime = intervalTime.add(schedule.interval, 'minute');
-      }
-      
-      // Add every 10-minute slot to cover user requests like 8:00
-      let tenMinTime = currentTime.clone();
-      while (tenMinTime.isBefore(endTime)) {
-        allPossibleTimes.add(tenMinTime.format('HH:mm'));
-        tenMinTime = tenMinTime.add(10, 'minute');
       }
       
       // Get current time to filter out past appointments
