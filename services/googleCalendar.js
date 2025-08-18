@@ -467,15 +467,22 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
         tenMinTime = tenMinTime.add(10, 'minute');
       }
       
+      // Get current time to filter out past appointments
+      const now = dayjs().tz(config.calendar.timeZone);
+      
       // Generate available slots from all possible times
       Array.from(allPossibleTimes).sort().forEach(timeSlot => {
         if (!occupiedTimes.has(timeSlot)) {
           const slotDateTime = dayjs(`${date} ${timeSlot}`, 'YYYY-MM-DD HH:mm', config.calendar.timeZone);
-          availableSlots.push({
-            time: timeSlot,
-            datetime: slotDateTime.format(), // Use local timezone format with DST awareness
-            available: true
-          });
+          
+          // Only add slots that are in the future
+          if (slotDateTime.isAfter(now)) {
+            availableSlots.push({
+              time: timeSlot,
+              datetime: slotDateTime.format(), // Use local timezone format with DST awareness
+              available: true
+            });
+          }
         }
       });
     });
