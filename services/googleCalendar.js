@@ -470,9 +470,6 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
       // Get current time to filter out past appointments
       const now = dayjs().tz(config.calendar.timeZone);
       
-      // Calculate hourly patient counts for ordinary hours
-      const hourlyPatientCounts = this.calculateHourlyPatientCounts(events, date);
-      
       // Generate available slots from all possible times
       Array.from(allPossibleTimes).sort().forEach(timeSlot => {
         if (!occupiedTimes.has(timeSlot)) {
@@ -480,94 +477,17 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
           
           // Only add slots that are in the future
           if (slotDateTime.isAfter(now)) {
-            // Check hourly limits for ordinary appointment types
-            const hourlyLimitOk = this.checkHourlyLimit(appointmentType, timeSlot, hourlyPatientCounts);
-            
-            if (hourlyLimitOk) {
-              availableSlots.push({
-                time: timeSlot,
-                datetime: slotDateTime.format(), // Use local timezone format with DST awareness
-                available: true
-              });
-            }
+            availableSlots.push({
+              time: timeSlot,
+              datetime: slotDateTime.format(), // Use local timezone format with DST awareness
+              available: true
+            });
           }
         }
       });
     });
 
     return availableSlots;
-  }
-
-  // Calculate patient counts per hour for ordinary hours
-  calculateHourlyPatientCounts(events, date) {
-    if (!config.businessRules.hourlyLimits.enabled) {
-      return {};
-    }
-
-    const hourlyCount = {};
-    const { applicableHours, excludedTypes } = config.businessRules.hourlyLimits;
-
-    events.forEach(event => {
-      if (event.start && event.start.dateTime) {
-        const startTime = dayjs(event.start.dateTime).tz(config.calendar.timeZone);
-        const timeSlot = startTime.format('HH:mm');
-        const hour = startTime.format('HH:00');
-
-        // Check if this time falls within applicable ordinary hours
-        const isInOrdinaryHours = applicableHours.some(timeRange => {
-          const rangeStart = dayjs(`${date} ${timeRange.start}`, 'YYYY-MM-DD HH:mm');
-          const rangeEnd = dayjs(`${date} ${timeRange.end}`, 'YYYY-MM-DD HH:mm');
-          return startTime.isBetween(rangeStart, rangeEnd, null, '[)');
-        });
-
-        // Check if this appointment type should be excluded from hourly limits
-        const summary = event.summary || '';
-        const isExcludedType = excludedTypes.some(type => {
-          const typeName = config.appointmentTypes[type]?.name || type;
-          return summary.includes(typeName) || summary.includes(type.toUpperCase());
-        });
-
-        // Count only ordinary appointments (not excluded types)
-        if (isInOrdinaryHours && !isExcludedType) {
-          hourlyCount[hour] = (hourlyCount[hour] || 0) + 1;
-        }
-      }
-    });
-
-    return hourlyCount;
-  }
-
-  // Check if a time slot respects hourly patient limits
-  checkHourlyLimit(appointmentType, timeSlot, hourlyPatientCounts) {
-    if (!config.businessRules.hourlyLimits.enabled) {
-      return true; // No limits enforced
-    }
-
-    const { maxPatientsPerHour, excludedTypes } = config.businessRules.hourlyLimits;
-
-    // Skip hourly limit check for excluded appointment types (športová prehliadka, konzultácia)
-    if (excludedTypes.includes(appointmentType)) {
-      return true;
-    }
-
-    // Check if this time slot falls within ordinary hours
-    const timeSlotTime = dayjs(`2000-01-01 ${timeSlot}`, 'YYYY-MM-DD HH:mm');
-    const hour = timeSlotTime.format('HH:00');
-
-    const isInOrdinaryHours = config.businessRules.hourlyLimits.applicableHours.some(timeRange => {
-      const rangeStart = dayjs(`2000-01-01 ${timeRange.start}`, 'YYYY-MM-DD HH:mm');
-      const rangeEnd = dayjs(`2000-01-01 ${timeRange.end}`, 'YYYY-MM-DD HH:mm');
-      return timeSlotTime.isBetween(rangeStart, rangeEnd, null, '[)');
-    });
-
-    // If not in ordinary hours, no hourly limit applies
-    if (!isInOrdinaryHours) {
-      return true;
-    }
-
-    // Check if this hour already has maximum patients
-    const currentCount = hourlyPatientCounts[hour] || 0;
-    return currentCount < maxPatientsPerHour;
   }
 }
 
