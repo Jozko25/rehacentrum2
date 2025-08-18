@@ -136,7 +136,7 @@ const config = {
     
     // Hourly patient limits for ordinary hours
     hourlyLimits: {
-      enabled: true,
+      enabled: false, // TEMPORARILY DISABLED FOR DEBUGGING
       maxPatientsPerHour: 6,
       applicableHours: [
         { start: '09:00', end: '11:30' }, // Morning ordinary hours
