@@ -360,7 +360,7 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
   }
 
   async getOrderNumber(appointmentType, date, appointmentDateTime) {
-    // Sports examinations don't get order numbers
+    // Sports examinations and other types don't get order numbers
     const typeConfig = config.appointmentTypes[appointmentType];
     if (!typeConfig || !typeConfig.orderNumbers) {
       return null;
@@ -388,20 +388,52 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
       return timeA.isBefore(timeB) ? -1 : 1;
     });
 
-    // Find the position where this new appointment should be inserted
+    // Determine if this is morning (9:00-11:30) or afternoon (13:00-14:20) slot
     const appointmentTime = dayjs(appointmentDateTime);
-    let orderNumber = 1;
+    const appointmentHour = appointmentTime.hour();
+    const appointmentMinute = appointmentTime.minute();
     
-    for (const event of orderedEvents) {
-      const eventTime = dayjs(event.start.dateTime);
-      if (appointmentTime.isAfter(eventTime)) {
-        orderNumber++;
-      } else {
-        break;
+    // Check if appointment is in afternoon slot (13:00-14:20)
+    const isAfternoonSlot = (appointmentHour === 13) || (appointmentHour === 14 && appointmentMinute <= 20);
+    
+    if (isAfternoonSlot) {
+      // For afternoon slots, start counting from order number 19
+      let orderNumber = 19;
+      
+      // Count only afternoon appointments before this one
+      for (const event of orderedEvents) {
+        const eventTime = dayjs(event.start.dateTime);
+        const eventHour = eventTime.hour();
+        const eventMinute = eventTime.minute();
+        
+        // Check if event is in afternoon slot and before current appointment
+        const isEventAfternoon = (eventHour === 13) || (eventHour === 14 && eventMinute <= 20);
+        
+        if (isEventAfternoon && appointmentTime.isAfter(eventTime)) {
+          orderNumber++;
+        }
       }
+      
+      return orderNumber;
+    } else {
+      // For morning slots, start from order number 1
+      let orderNumber = 1;
+      
+      // Count only morning appointments before this one
+      for (const event of orderedEvents) {
+        const eventTime = dayjs(event.start.dateTime);
+        const eventHour = eventTime.hour();
+        
+        // Check if event is in morning slot (9:00-11:30) and before current appointment
+        const isEventMorning = eventHour >= 9 && eventHour < 12;
+        
+        if (isEventMorning && appointmentTime.isAfter(eventTime)) {
+          orderNumber++;
+        }
+      }
+      
+      return orderNumber;
     }
-    
-    return orderNumber;
   }
 
   async isVacationDay(date) {

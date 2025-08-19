@@ -28,7 +28,7 @@ const config = {
       schedule: [
         { start: '07:00', end: '08:40', interval: 20 }
       ],
-      dailyLimit: 5,
+      dailyLimit: 6,
       duration: 20,
       price: 130,
       currency: 'EUR',
@@ -67,7 +67,7 @@ const config = {
       name: 'Kontrolné vyšetrenie',
       schedule: [
         { start: '09:00', end: '11:30', interval: 10 },
-        { start: '13:00', end: '15:00', interval: 10 }
+        { start: '13:00', end: '14:20', interval: 10 }
       ],
       dailyLimit: 50,
       duration: 30,
@@ -86,8 +86,7 @@ const config = {
     zdravotnicke_pomocky: {
       name: 'Zdravotnícke pomôcky',
       schedule: [
-        { start: '09:00', end: '11:30', interval: 10 },
-        { start: '13:00', end: '15:00', interval: 10 }
+        { start: '07:00', end: '16:00', interval: 10 }
       ],
       dailyLimit: 1,
       duration: 30,
@@ -100,16 +99,15 @@ const config = {
         'Old aids for inspection if applicable',
         'Insurance card'
       ],
-      orderNumbers: true
+      orderNumbers: false
     },
     
     konzultacia: {
       name: 'Konzultácia',
       schedule: [
-        { start: '07:30', end: '09:00', interval: 10 },
-        { start: '15:00', end: '16:00', interval: 10 }
+        { start: '14:30', end: '15:00', interval: 10 }
       ],
-      dailyLimit: 20,
+      dailyLimit: 3,
       duration: 30,
       price: 30,
       currency: 'EUR',
@@ -119,7 +117,7 @@ const config = {
         'Cash payment (30€)',
         'Medical documents if available'
       ],
-      orderNumbers: true
+      orderNumbers: false
     }
   },
   
