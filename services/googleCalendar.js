@@ -397,37 +397,39 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
     const isAfternoonSlot = (appointmentHour === 13) || (appointmentHour === 14 && appointmentMinute <= 20);
     
     if (isAfternoonSlot) {
-      // For afternoon slots, start counting from order number 19
-      let orderNumber = 19;
+      // For afternoon slots, count appointments from start of afternoon block
+      let orderNumber = 19; // Base number for afternoon
       
-      // Count only afternoon appointments before this one
+      // Count all afternoon appointments that come before this time slot
       for (const event of orderedEvents) {
         const eventTime = dayjs(event.start.dateTime);
         const eventHour = eventTime.hour();
         const eventMinute = eventTime.minute();
         
-        // Check if event is in afternoon slot and before current appointment
+        // Check if event is in afternoon slot (13:00-14:20)
         const isEventAfternoon = (eventHour === 13) || (eventHour === 14 && eventMinute <= 20);
         
-        if (isEventAfternoon && appointmentTime.isAfter(eventTime)) {
+        // Count if it's an afternoon appointment AND comes before our appointment time
+        if (isEventAfternoon && eventTime.isBefore(appointmentTime)) {
           orderNumber++;
         }
       }
       
       return orderNumber;
     } else {
-      // For morning slots, start from order number 1
-      let orderNumber = 1;
+      // For morning slots, count from 1
+      let orderNumber = 1; // Base number for morning
       
-      // Count only morning appointments before this one
+      // Count all morning appointments that come before this time slot
       for (const event of orderedEvents) {
         const eventTime = dayjs(event.start.dateTime);
         const eventHour = eventTime.hour();
         
-        // Check if event is in morning slot (9:00-11:30) and before current appointment
+        // Check if event is in morning slot (9:00-11:30)
         const isEventMorning = eventHour >= 9 && eventHour < 12;
         
-        if (isEventMorning && appointmentTime.isAfter(eventTime)) {
+        // Count if it's a morning appointment AND comes before our appointment time
+        if (isEventMorning && eventTime.isBefore(appointmentTime)) {
           orderNumber++;
         }
       }

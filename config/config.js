@@ -86,9 +86,10 @@ const config = {
     zdravotnicke_pomocky: {
       name: 'Zdravotnícke pomôcky',
       schedule: [
-        { start: '07:00', end: '16:00', interval: 10 }
+        { start: '09:00', end: '11:30', interval: 10 },
+        { start: '13:00', end: '14:20', interval: 10 }
       ],
-      dailyLimit: 1,
+      dailyLimit: 10,
       duration: 30,
       price: 0,
       currency: 'EUR',
@@ -99,7 +100,7 @@ const config = {
         'Old aids for inspection if applicable',
         'Insurance card'
       ],
-      orderNumbers: false
+      orderNumbers: true
     },
     
     konzultacia: {

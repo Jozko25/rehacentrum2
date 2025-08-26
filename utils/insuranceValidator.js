@@ -26,16 +26,10 @@ const insuranceCompanies = {
     variations: [
       'union', 'únia', 'unia', 'union zdravotná poisťovňa', 
       'union zdravotna poistovna', 'únia zdravotná poisťovňa',
-      'unia zdravotna poistovna'
-    ]
-  },
-  'Allianz': {
-    official: 'Allianz - Slovenská poisťovňa',
-    variations: [
-      'allianz', 'alianz', 'alians', 'allianz slovenská', 'allianz slovenska',
-      'slovenská poisťovňa', 'slovenska poistovna', 'allianz sp'
+      'unia zdravotna poistovna', 'junion', 'unión'
     ]
   }
+
 };
 
 /**

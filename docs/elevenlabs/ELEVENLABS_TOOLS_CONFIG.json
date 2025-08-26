@@ -19,7 +19,7 @@
           "id": "preferred_time",
           "type": "string",
           "value_type": "llm_prompt",
-          "description": "Preferovaný čas dňa: morning alebo afternoon",
+          "description": "Preferovaný čas v slovenčine: ráno, dopoludnia, poobede, popoludní, večer. Pre natural language time parsing.",
           "dynamic_variable": "",
           "constant_value": "",
           "required": false

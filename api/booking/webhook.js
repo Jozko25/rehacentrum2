@@ -17,6 +17,7 @@ const appointmentValidator = require('../../services/appointmentValidator');
 const smsService = require('../../services/smsService');
 const holidayService = require('../../services/holidayService');
 const { addLog } = require('../../lib/logger');
+const timeParser = require('../../utils/timeParser');
 
 // Handle getting more available slots
 async function handleGetMoreSlots(parameters) {
@@ -133,7 +134,7 @@ async function initializeServices() {
 }
 
 async function handleGetAvailableSlots(parameters) {
-  const { date, appointment_type, time, offset = 0, show_more = false } = parameters;
+  const { date, appointment_type, time, preferred_time, offset = 0, show_more = false } = parameters;
   
   if (!date || !appointment_type) {
     return {
@@ -151,14 +152,54 @@ async function handleGetAvailableSlots(parameters) {
       };
     }
 
+    // Check for holidays first
+    const isHoliday = await holidayService.isHoliday(date);
+    const holidayInfo = isHoliday ? holidayService.getHolidayInfo(date) : null;
+    
     const availableSlots = await googleCalendar.getAvailableSlots(date, appointment_type);
     const typeConfig = config.appointmentTypes[appointment_type];
     const formattedDate = dayjs(date).format('DD.MM.YYYY');
     const dayName = dayjs(date).format('dddd');
 
+    // If it's a holiday, warn before offering slots
+    if (isHoliday && holidayInfo) {
+      if (availableSlots.length === 0) {
+        return {
+          success: true,
+          message: `${dayName} ${formattedDate} je ${holidayInfo.name} - máme zatvorené. Skúste iný deň prosím.`
+        };
+      }
+      // If there are slots on holiday (shouldn't happen), warn anyway
+      return {
+        success: true,
+        message: `Upozornenie: ${dayName} ${formattedDate} je ${holidayInfo.name}. V tento deň máme zatvorené. Prosím vyberte si iný deň.`
+      };
+    }
+
+    // Handle natural language time descriptions (poobede, ráno, etc.)
+    let filteredSlots = availableSlots;
+    if (preferred_time && !time) {
+      // Parse natural language time
+      const parsedTime = timeParser.parseNaturalTime(preferred_time);
+      if (parsedTime) {
+        filteredSlots = availableSlots.filter(slot => {
+          return timeParser.matchesNaturalTime(slot.time, preferred_time);
+        });
+        
+        if (filteredSlots.length === 0 && availableSlots.length > 0) {
+          // No slots in preferred time, but other slots available
+          const timeDescription = preferred_time.toLowerCase();
+          return {
+            success: true,
+            message: `Žiaľ, ${timeDescription} na ${dayName} ${formattedDate} nie sú voľné termíny pre ${typeConfig.name}. Dostupné termíny sú: ${availableSlots.slice(0, 3).map(s => s.time).join(', ')}.`
+          };
+        }
+      }
+    }
+
     // If user requested a specific time, check if it's available first
     if (time) {
-      const requestedSlot = availableSlots.find(slot => slot.time === time);
+      const requestedSlot = filteredSlots.find(slot => slot.time === time);
       if (requestedSlot) {
         return {
           success: true,
@@ -183,10 +224,10 @@ async function handleGetAvailableSlots(parameters) {
     }
 
     // General availability check without specific time
-    if (availableSlots.length === 0) {
+    if (filteredSlots.length === 0) {
       return {
         success: true,
-        message: `Žiaľ, na ${dayName} ${formattedDate} nie sú dostupné žiadne voľné termíny pre ${typeConfig.name}.`
+        message: `Žiaľ, na ${dayName} ${formattedDate} nie sú dostupné žiadne voľné termíny pre ${typeConfig.name}${preferred_time ? ' ' + preferred_time : ''}.`
       };
     }
 
@@ -194,10 +235,10 @@ async function handleGetAvailableSlots(parameters) {
     let slotsToShow;
     if (show_more && offset > 0) {
       // Show one additional slot when requesting more
-      slotsToShow = availableSlots.slice(0, offset + 1);
+      slotsToShow = filteredSlots.slice(0, offset + 1);
     } else {
       // Show first 2 slots initially
-      slotsToShow = availableSlots.slice(0, 2);
+      slotsToShow = filteredSlots.slice(0, 2);
     }
 
     const slotTimes = slotsToShow.map(slot => slot.time).join(', ');
@@ -223,7 +264,7 @@ async function handleGetAvailableSlots(parameters) {
 }
 
 async function handleFindClosestSlot(parameters) {
-  const { appointment_type, preferred_date, days_to_search = 7 } = parameters;
+  const { appointment_type, preferred_date, preferred_time, days_to_search = 7 } = parameters;
   
   if (!appointment_type) {
     return {
@@ -248,14 +289,29 @@ async function handleFindClosestSlot(parameters) {
       const checkDate = startDate.add(i, 'day');
       const dateString = checkDate.format('YYYY-MM-DD');
       
+      // Check if it's a holiday first
+      const isHoliday = await holidayService.isHoliday(dateString);
+      if (isHoliday) {
+        continue; // Skip holidays
+      }
+      
       if (await holidayService.isWorkingDay(dateString)) {
         const slots = await googleCalendar.getAvailableSlots(dateString, appointment_type);
-        if (slots.length > 0) {
+        
+        // Filter by preferred time if specified
+        let filteredSlots = slots;
+        if (preferred_time) {
+          filteredSlots = slots.filter(slot => 
+            timeParser.matchesNaturalTime(slot.time, preferred_time)
+          );
+        }
+        
+        if (filteredSlots.length > 0) {
           const typeConfig = config.appointmentTypes[appointment_type];
           foundSlot = {
             date: dateString,
             day_name: checkDate.format('dddd'),
-            time: slots[0].time,
+            time: filteredSlots[0].time,
             datetime: slots[0].datetime,
             days_from_preferred: i,
             appointment_type: typeConfig.name,

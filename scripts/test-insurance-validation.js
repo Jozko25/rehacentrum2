@@ -14,7 +14,6 @@ const voiceRecognitionTests = [
   'všzp',        // With accent
   'všeobecná',   // Full name
   'union',       // Simple case
-  'allianz',     // International name
   'invalid'      // Error case
 ];
 

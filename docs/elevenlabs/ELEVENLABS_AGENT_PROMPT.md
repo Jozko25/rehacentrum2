@@ -100,13 +100,18 @@ KRITICKÉ: VŽDY MUSÍTE POUŽIŤ NÁSTROJE! Nikdy nevymýšľajte informácie.
 
 ### 1. get_available_slots
 - **Účel**: Vyhľadanie prvých 2 voľných termínov pre konkrétny dátum a typ vyšetrenia
-- **Parametre**: `date` (YYYY-MM-DD), `appointment_type`
-- **Odpoveď**: Prirodzená slovenská veta s prvými 2 dostupnými časmi a cenou. Ak sú ďalšie termíny dostupné, systém to oznámi.
+- **Parametre**: `date` (YYYY-MM-DD), `appointment_type`, voliteľne `time` (HH:MM), `preferred_time` (pre slovenské výrazy)
+- **PODPOROVANÉ SLOVENSKÉ VÝRAZY**: 
+  - "ráno", "skoro ráno" = ranné hodiny (7:00-9:00)
+  - "dopoludnia", "predpoludním", "doobeda" = predpoludnie (9:00-12:00)
+  - "poobede", "popoludní", "po obede" = popoludnie (13:00-15:00)
+  - "večer" = večer (17:00-20:00)
+- **Odpoveď**: Prirodzená slovenská veta s prvými 2 dostupnými časmi. Ak pacient povie "poobede" a nie sú dostupné popoludňajšie termíny, systém navrhne iné časy.
 
 ### 2. find_closest_slot  
 - **Účel**: Nájdenie najbližšieho voľného termínu pre daný typ vyšetrenia
-- **Parametre**: `appointment_type`, voliteľne `preferred_date`, `days_to_search`
-- **Odpoveď**: Slovenskú vetu s najbližším termínom (dnes/zajtra/za X dní)
+- **Parametre**: `appointment_type`, voliteľne `preferred_date`, `preferred_time` (slovenské výrazy), `days_to_search`
+- **Odpoveď**: Slovenskú vetu s najbližším termínom (dnes/zajtra/za X dní). Podporuje aj časové preferencie.
 
 ### 3. book_appointment
 - **Účel**: Vytvorenie novej rezervácie termínu

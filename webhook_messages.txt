@@ -1,0 +1,72 @@
+WEBHOOK SLOVAK MESSAGES - ALL TEXT RESPONSES
+
+=== AVAILABILITY MESSAGES ===
+1. `Žiaľ, na ${dayName} ${formattedDate} nie sú dostupné žiadne voľné termíny pre ${typeConfig.name}.`
+
+2. `To sú všetky dostupné termíny pre ${typeConfig.name} na ${dayName} ${formattedDate}.`
+
+3. `Skvelé! Termín ${time} na ${dayName} ${formattedDate} pre ${typeConfig.name} je dostupný. Môžeme pokračovať s rezerváciou. Potrebujem ešte Vaše meno, priezvisko, telefónne číslo a poisťovňu.`
+
+4. `Žiaľ, termín ${time} nie je dostupný a na ${dayName} ${formattedDate} nie sú dostupné žiadne voľné termíny pre ${typeConfig.name}.`
+
+5. `Žiaľ, termín ${time} nie je dostupný. Alternatívne termíny na ${dayName} ${formattedDate} pre ${typeConfig.name} sú: ${slotTimes}. Ktorý z týchto termínov Vám vyhovuje?`
+
+6. `Na ${dayName} ${formattedDate} sú dostupné tieto termíny pre ${typeConfig.name}: ${slotTimes}.`
+
+=== CLOSEST SLOT MESSAGES ===
+7. "Potrebujem typ vyšetrenia na vyhľadanie najbližšieho termínu."
+
+8. `Neplatný typ vyšetrenia. Dostupné typy sú: ${typeValidation.availableTypes.join(', ')}.`
+
+9. `Najbližší voľný termín pre ${foundSlot.appointment_type} je ${dayPrefix} (${foundSlot.day_name} ${formattedDate}) o ${foundSlot.time}.`
+
+10. `Žiaľ, v najbližších ${days_to_search} dňoch nie sú dostupné žiadne voľné termíny pre ${config.appointmentTypes[appointment_type].name}.`
+
+=== BOOKING MESSAGES ===
+11. "Na rezerváciu termínu potrebujem tieto údaje: typ vyšetrenia, dátum a čas, meno, priezvisko, telefónne číslo a poisťovňu."
+
+12. "Termín už nie je dostupný. Niekto iný ho medzitým rezervoval."
+
+13. `Termín bol úspešne rezervovaný. ${patient_name} ${patient_surname} má objednaný ${typeConfig.name} na ${dayName} ${formattedDate} o ${formattedTime}.`
+
+14. ` Poradové číslo: ${orderNumber}.`
+
+15. ` Cena: ${typeConfig.price}€.`
+
+16. ' DÔLEŽITÉ: Prísť nalačno, prineste si jedlo a vodu po vyšetrení, športové oblečenie a uterák.'
+
+17. ' Platba hotovosťou.'
+
+18. ' SMS potvrdenie bolo odoslané.'
+
+=== CANCELLATION MESSAGES ===
+19. "Na zrušenie termínu potrebujem meno pacienta, telefónne číslo a dátum termínu."
+
+20. "Termín sa nenašiel. Skontrolujte prosím meno, telefónne číslo a dátum termínu."
+
+21. `Termín bol úspešne zrušený.`
+
+22. ' SMS potvrdenie o zrušení bolo odoslané.'
+
+=== RESCHEDULE MESSAGES ===
+23. "Na presunutie termínu potrebujem meno pacienta, telefónne číslo, pôvodný dátum a nový dátum s časom."
+
+24. `Termín bol úspešne presunutý. Pôvodný termín ${oldDate} o ${oldTime} bol presunutý na ${newDayName} ${newDate} o ${newTime}. Nové poradové číslo: ${newOrderNumber}.${smsText}`
+
+25. ' SMS potvrdenie o presunutí bolo odoslané.'
+
+=== SMS MESSAGES ===
+26. "Na odoslanie SMS potrebujem telefónne číslo a správu."
+
+27. `SMS správa bola úspešne odoslaná na číslo ${phone}.`
+
+28. `SMS sa nepodarilo odoslať na číslo ${phone}`
+
+=== ERROR MESSAGES ===
+29. "Došlo k chybe"
+
+=== MORE SLOTS MESSAGE ===
+30. ` Máme ešte ďalšie voľné termíny ak potrebujete.`
+
+=== ALTERNATIVE MESSAGES (in error responses) ===
+31. Alternative slots format: ` Alternatívne termíny: ${alternatives.slice(0, 3).map(alt => `${alt.dayName} ${dayjs(alt.date).format('DD.MM.')} (${alt.slots.slice(0, 2).map(s => s.time).join(', ')})`).join('; ')}.`
