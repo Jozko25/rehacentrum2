@@ -39,9 +39,10 @@ async function handleGetMoreSlots(parameters) {
       };
     }
 
-    // Check for holidays first
+    // Check for holidays and vacation days first
     const isHoliday = await holidayService.isHoliday(date);
     const holidayInfo = isHoliday ? holidayService.getHolidayInfo(date) : null;
+    const isVacation = await googleCalendar.isVacationDay(date);
     
     const formattedDate = dayjs(date).format('DD.MM.YYYY');
     const dayName = dayjs(date).format('dddd');
@@ -52,6 +53,14 @@ async function handleGetMoreSlots(parameters) {
       return {
         success: true,
         message: `${dayName} ${formattedDate} je ${holidayInfo.name} - máme zatvorené. Skúste iný deň prosím.`
+      };
+    }
+    
+    // If it's a vacation day, warn before offering slots
+    if (isVacation) {
+      return {
+        success: true,
+        message: `V ${dayName} ${formattedDate} máme dovolenku. Skúste iný deň prosím.`
       };
     }
 
@@ -165,29 +174,32 @@ async function handleGetAvailableSlots(parameters) {
       };
     }
 
-    // Check for holidays first
+    // Check for holidays and vacation days first
     const isHoliday = await holidayService.isHoliday(date);
     const holidayInfo = isHoliday ? holidayService.getHolidayInfo(date) : null;
+    const isVacation = await googleCalendar.isVacationDay(date);
     
-    const availableSlots = await googleCalendar.getAvailableSlots(date, appointment_type);
-    const typeConfig = config.appointmentTypes[appointment_type];
     const formattedDate = dayjs(date).format('DD.MM.YYYY');
     const dayName = dayjs(date).format('dddd');
+    const typeConfig = config.appointmentTypes[appointment_type];
 
     // If it's a holiday, warn before offering slots
     if (isHoliday && holidayInfo) {
-      if (availableSlots.length === 0) {
-        return {
-          success: true,
-          message: `${dayName} ${formattedDate} je ${holidayInfo.name} - máme zatvorené. Skúste iný deň prosím.`
-        };
-      }
-      // If there are slots on holiday (shouldn't happen), warn anyway
       return {
         success: true,
-        message: `Upozornenie: ${dayName} ${formattedDate} je ${holidayInfo.name}. V tento deň máme zatvorené. Prosím vyberte si iný deň.`
+        message: `${dayName} ${formattedDate} je ${holidayInfo.name} - máme zatvorené. Skúste iný deň prosím.`
       };
     }
+    
+    // If it's a vacation day, warn before offering slots
+    if (isVacation) {
+      return {
+        success: true,
+        message: `V ${dayName} ${formattedDate} máme dovolenku. Skúste iný deň prosím.`
+      };
+    }
+
+    const availableSlots = await googleCalendar.getAvailableSlots(date, appointment_type);
 
     // Handle natural language time descriptions (poobede, ráno, etc.)
     let filteredSlots = availableSlots;
