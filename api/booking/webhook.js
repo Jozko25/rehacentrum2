@@ -39,10 +39,23 @@ async function handleGetMoreSlots(parameters) {
       };
     }
 
-    const availableSlots = await googleCalendar.getAvailableSlots(date, appointment_type);
-    const typeConfig = config.appointmentTypes[appointment_type];
+    // Check for holidays first
+    const isHoliday = await holidayService.isHoliday(date);
+    const holidayInfo = isHoliday ? holidayService.getHolidayInfo(date) : null;
+    
     const formattedDate = dayjs(date).format('DD.MM.YYYY');
     const dayName = dayjs(date).format('dddd');
+    const typeConfig = config.appointmentTypes[appointment_type];
+    
+    // If it's a holiday, warn before offering slots
+    if (isHoliday && holidayInfo) {
+      return {
+        success: true,
+        message: `${dayName} ${formattedDate} je ${holidayInfo.name} - máme zatvorené. Skúste iný deň prosím.`
+      };
+    }
+
+    const availableSlots = await googleCalendar.getAvailableSlots(date, appointment_type);
 
     if (availableSlots.length === 0) {
       return {

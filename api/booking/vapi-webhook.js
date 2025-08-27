@@ -272,10 +272,32 @@ async function handleGetAvailableSlots(parameters) {
       };
     }
 
-    const availableSlots = await googleCalendar.getAvailableSlots(date, appointment_type);
-    const typeConfig = config.appointmentTypes[appointment_type];
+    // Check for holidays/vacation days BEFORE getting slots
+    const isHoliday = await holidayService.isHoliday(date);
+    const holidayInfo = isHoliday ? holidayService.getHolidayInfo(date) : null;
+    const isVacation = await googleCalendar.isVacationDay(date);
+    
     const formattedDate = dayjs(date).format('DD.MM.YYYY');
     const dayName = dayjs(date).format('dddd');
+    const typeConfig = config.appointmentTypes[appointment_type];
+    
+    // If it's a holiday, return immediately with specific message
+    if (isHoliday && holidayInfo) {
+      return {
+        success: true,
+        message: `${dayName} ${formattedDate} je ${holidayInfo.name} - máme zatvorené. Skúste iný deň prosím.`
+      };
+    }
+    
+    // If it's a vacation day, return immediately with specific message
+    if (isVacation) {
+      return {
+        success: true,
+        message: `V ${dayName} ${formattedDate} máme dovolenku. Skúste iný deň prosím.`
+      };
+    }
+
+    const availableSlots = await googleCalendar.getAvailableSlots(date, appointment_type);
 
     // If user requested a specific time, check if it's available first
     if (time) {
@@ -368,6 +390,13 @@ async function handleFindClosestSlot(parameters) {
     for (let i = 0; i < days_to_search; i++) {
       const checkDate = startDate.add(i, 'day');
       const dateString = checkDate.format('YYYY-MM-DD');
+      
+      // Check if it's a holiday or vacation day first
+      const isHoliday = await holidayService.isHoliday(dateString);
+      const isVacation = await googleCalendar.isVacationDay(dateString);
+      if (isHoliday || isVacation) {
+        continue; // Skip holidays and vacation days
+      }
       
       if (await holidayService.isWorkingDay(dateString)) {
         const slots = await googleCalendar.getAvailableSlots(dateString, appointment_type);
@@ -846,10 +875,32 @@ async function handleGetMoreSlots(parameters) {
       };
     }
 
-    const availableSlots = await googleCalendar.getAvailableSlots(date, appointment_type);
-    const typeConfig = config.appointmentTypes[appointment_type];
+    // Check for holidays/vacation days BEFORE getting slots
+    const isHoliday = await holidayService.isHoliday(date);
+    const holidayInfo = isHoliday ? holidayService.getHolidayInfo(date) : null;
+    const isVacation = await googleCalendar.isVacationDay(date);
+    
     const formattedDate = dayjs(date).format('DD.MM.YYYY');
     const dayName = dayjs(date).format('dddd');
+    const typeConfig = config.appointmentTypes[appointment_type];
+    
+    // If it's a holiday, return immediately with specific message
+    if (isHoliday && holidayInfo) {
+      return {
+        success: true,
+        message: `${dayName} ${formattedDate} je ${holidayInfo.name} - máme zatvorené. Skúste iný deň prosím.`
+      };
+    }
+    
+    // If it's a vacation day, return immediately with specific message
+    if (isVacation) {
+      return {
+        success: true,
+        message: `V ${dayName} ${formattedDate} máme dovolenku. Skúste iný deň prosím.`
+      };
+    }
+
+    const availableSlots = await googleCalendar.getAvailableSlots(date, appointment_type);
 
     if (availableSlots.length === 0) {
       return {
