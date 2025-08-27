@@ -576,7 +576,7 @@ async function handleBookAppointment(parameters) {
       
       // Add specific requirements based on appointment type
       if (appointment_type === 'sportova_prehliadka') {
-        successMessage += ' DÔLEŽITÉ: Prísť nalačno (8 hodín), prineste si jedlo a vodu po vyšetrení, športové oblečenie a uterák.';
+        successMessage += ' DÔLEŽITÉ: Prísť nalačno, prineste si jedlo a vodu po vyšetrení, športové oblečenie a uterák.';
       } else if (appointment_type === 'konzultacia') {
         successMessage += ' Platba hotovosťou.';
       }

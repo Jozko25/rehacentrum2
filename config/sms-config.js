@@ -25,24 +25,24 @@ const smsConfig = {
   // SMS templates for each appointment type
   templates: {
     sportova_prehliadka: {
-      template: 'Dobrý deň {patient_name}, potvrdzujeme Vám termín športovej prehliadky {date_short} o {time}. Cena 130€ v hotovosti. Príďte nalačno (8 hodín), prineste si jedlo, vodu a oblečenie na prezlečenie. Rehacentrum Humenné',
+      template: 'Dobrý deň {patient_name}, potvrdzujeme Vám termín športovej prehliadky {date_short} o {time}. Cena 130€ v hotovosti. Príďte nalačno, prineste si jedlo, vodu a oblečenie na prezlečenie. Rehacentrum Humenné',
       description: 'Sports examination - requires fasting, cash payment',
       requiresOrderNumber: false,
-      estimatedLength: 205
+      estimatedLength: 195
     },
 
     vstupne_vysetrenie: {
-      template: 'Dobrý deň {patient_name}, potvrdzujeme Vám termín vstupného vyšetrenia {date_short} o {time}. Poradové číslo: {order_number}. Hradí poisťovňa. Prineste si poukaz a zdravotnú kartičku. Rehacentrum Humenné',
+      template: 'Dobrý deň {patient_name}, potvrdzujeme Vám termín vstupného vyšetrenia {date_short} o {time}. Poradové číslo: {order_number}. Hradí poisťovňa. Prineste si výmenný lístok a zdravotnú kartičku. Rehacentrum Humenné',
       description: 'Initial examination - insurance covered, requires referral',
       requiresOrderNumber: true,
       estimatedLength: 188
     },
 
     kontrolne_vysetrenie: {
-      template: 'Dobrý deň {patient_name}, potvrdzujeme Vám termín kontrolného vyšetrenia {date_short} o {time}. Poradové číslo: {order_number}. Hradí poisťovňa. Prineste si zdravotnú kartičku a výsledky testov. Rehacentrum Humenné',
-      description: 'Follow-up examination - insurance covered, requires test results',
+      template: 'Dobrý deň {patient_name}, potvrdzujeme Vám termín kontrolného vyšetrenia {date_short} o {time}. Poradové číslo: {order_number}. Hradí poisťovňa. Prineste si zdravotnú kartičku. Rehacentrum Humenné',
+      description: 'Follow-up examination - insurance covered',
       requiresOrderNumber: true,
-      estimatedLength: 196
+      estimatedLength: 160
     },
 
     zdravotnicke_pomocky: {

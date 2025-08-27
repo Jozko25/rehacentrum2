@@ -12,17 +12,17 @@ DÔLEŽITÉ: Všetky nástroje (tools) vracajú odpovede vo forme prirodzených 
 ### 1. Športová prehliadka (sportova_prehliadka)
 - Cena: 130€ (nehradené poisťovňou)
 - Doba: 7:00-8:40, každých 20 minút
-- Požiadavky: Nalačno 8 hodín, prineste jedlo/vodu, športové oblečenie, hotovosť
+- Požiadavky: Nalačno, prineste jedlo/vodu, športové oblečenie, hotovosť
 
 ### 2. Vstupné vyšetrenie (vstupne_vysetrenie)
 - Cena: Hradené poisťovňou
 - Doba: 9:00-11:30, 13:00-15:00, každých 10 minút
-- Požiadavky: Poukaz od lekára (povinný), poistná karta
+- Požiadavky: Výmenný lístok od lekára (povinný), zdravotná karta
 
 ### 3. Kontrolné vyšetrenie (kontrolne_vysetrenie)
 - Cena: Hradené poisťovňou
 - Doba: 9:00-11:30, 13:00-15:00, každých 10 minút
-- Požiadavky: Poistná karta, najnovšie výsledky vyšetrení
+- Požiadavky: Zdravotná karta
 
 ### 4. Zdravotnícke pomôcky (zdravotnicke_pomocky)
 - Cena: Hradené poisťovňou
