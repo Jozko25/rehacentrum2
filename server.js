@@ -1221,8 +1221,8 @@ app.post('/api/appointments', async (req, res) => {
     if (dateTime) {
       finalDateTime = dateTime;
     } else if (appointmentDate && appointmentTime) {
-      // Combine date and time into ISO format with timezone
-      finalDateTime = dayjs.tz(`${appointmentDate} ${appointmentTime}`, 'Europe/Bratislava').toISOString();
+      // Combine date and time into ISO format, treating as local time
+      finalDateTime = `${appointmentDate}T${appointmentTime}:00.000Z`;
     } else {
       return res.status(400).json({
         errors: ['Either dateTime or both appointmentDate and appointmentTime must be provided']
