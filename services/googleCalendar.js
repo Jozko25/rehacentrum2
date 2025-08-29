@@ -437,10 +437,8 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
       // Morning queue numbers: 1st appointment = 1, 2nd = 2, 3rd = 3, etc.
       // Add 1 because we're booking a NEW appointment
       
-      // TEMP DEBUG: Add 500 to show this path is working
-      const result = morningCount + 1 + 500;
-      console.log(`MORNING DEBUG: Found ${morningCount} existing morning appointments, returning ${result}`);
-      return result;
+      // Morning logic: count all existing + 1 for new appointment
+      return morningCount + 1;
     }
   }
 
