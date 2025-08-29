@@ -398,7 +398,7 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
     
     if (isAfternoonSlot) {
       // For afternoon slots, start counting from 19
-      let orderNumber = 18; // Start at 18 so first appointment gets 19
+      let orderNumber = 98; // TEMP TEST: Start at 98 to see if deployment works
       
       console.log(`DEBUG AFTERNOON: appointmentTime=${appointmentTime.format()}, orderedEvents.length=${orderedEvents.length}`);
       
@@ -420,7 +420,7 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
         }
       }
       
-      // Add 1 for the current appointment being booked
+      // Add 1 for the current appointment being booked  
       const finalNumber = orderNumber + 1;
       console.log(`DEBUG AFTERNOON FINAL: ${finalNumber}`);
       return finalNumber;
