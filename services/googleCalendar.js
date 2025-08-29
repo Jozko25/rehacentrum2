@@ -397,10 +397,10 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
     const isAfternoonSlot = (appointmentHour === 13) || (appointmentHour === 14 && appointmentMinute <= 20);
     
     if (isAfternoonSlot) {
-      // For afternoon slots, start counting from 19
-      let orderNumber = 18; // Start at 18 so first appointment gets 19
+      // For afternoon slots, count all existing afternoon appointments + 1 for this new one
+      let afternoonCount = 0;
       
-      // Count all afternoon appointments that come before this time slot
+      // Count all existing afternoon appointments  
       for (const event of orderedEvents) {
         const eventTime = dayjs(event.start.dateTime);
         const eventHour = eventTime.hour();
@@ -409,19 +409,18 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
         // Check if event is in afternoon slot (13:00-14:20)
         const isEventAfternoon = (eventHour === 13) || (eventHour === 14 && eventMinute <= 20);
         
-        // Count if it's an afternoon appointment AND comes before our appointment time
-        if (isEventAfternoon && eventTime.isBefore(appointmentTime)) {
-          orderNumber++;
+        if (isEventAfternoon) {
+          afternoonCount++;
         }
       }
       
-      // Add 1 for the current appointment being booked  
-      return orderNumber + 1;
+      // Afternoon queue numbers start at 19, so return 19 + count of existing afternoon appointments
+      return 19 + afternoonCount;
     } else {
-      // For morning slots, start counting from 1
-      let orderNumber = 0; // Start at 0 so first appointment gets 1
+      // For morning slots, count all existing morning appointments + 1 for this new one
+      let morningCount = 0;
       
-      // Count all morning appointments that come before this time slot
+      // Count all existing morning appointments
       for (const event of orderedEvents) {
         const eventTime = dayjs(event.start.dateTime);
         const eventHour = eventTime.hour();
@@ -429,14 +428,13 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
         // Check if event is in morning slot (9:00-11:30)
         const isEventMorning = eventHour >= 9 && eventHour < 12;
         
-        // Count if it's a morning appointment AND comes before our appointment time
-        if (isEventMorning && eventTime.isBefore(appointmentTime)) {
-          orderNumber++;
+        if (isEventMorning) {
+          morningCount++;
         }
       }
       
-      // Add 1 for the current appointment being booked
-      return orderNumber + 1;
+      // Morning queue numbers start at 1, so return 1 + count of existing morning appointments
+      return 1 + morningCount;
     }
   }
 
