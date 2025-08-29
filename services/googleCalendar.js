@@ -400,6 +400,8 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
       // For afternoon slots, start counting from 19
       let orderNumber = 18; // Start at 18 so first appointment gets 19
       
+      console.log(`DEBUG AFTERNOON: appointmentTime=${appointmentTime.format()}, orderedEvents.length=${orderedEvents.length}`);
+      
       // Count all afternoon appointments that come before or at this time slot
       for (const event of orderedEvents) {
         const eventTime = dayjs(event.start.dateTime);
@@ -409,17 +411,24 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
         // Check if event is in afternoon slot (13:00-14:20)
         const isEventAfternoon = (eventHour === 13) || (eventHour === 14 && eventMinute <= 20);
         
+        console.log(`DEBUG EVENT: ${event.summary}, time=${eventTime.format()}, isAfternoon=${isEventAfternoon}, isBefore=${eventTime.isBefore(appointmentTime)}`);
+        
         // Count if it's an afternoon appointment AND comes before our appointment time
         if (isEventAfternoon && eventTime.isBefore(appointmentTime)) {
           orderNumber++;
+          console.log(`DEBUG: Incremented afternoon orderNumber to ${orderNumber}`);
         }
       }
       
       // Add 1 for the current appointment being booked
-      return orderNumber + 1;
+      const finalNumber = orderNumber + 1;
+      console.log(`DEBUG AFTERNOON FINAL: ${finalNumber}`);
+      return finalNumber;
     } else {
       // For morning slots, start counting from 1
       let orderNumber = 0; // Start at 0 so first appointment gets 1
+      
+      console.log(`DEBUG MORNING: appointmentTime=${appointmentTime.format()}, orderedEvents.length=${orderedEvents.length}`);
       
       // Count all morning appointments that come before this time slot
       for (const event of orderedEvents) {
@@ -429,14 +438,19 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
         // Check if event is in morning slot (9:00-11:30)
         const isEventMorning = eventHour >= 9 && eventHour < 12;
         
+        console.log(`DEBUG EVENT: ${event.summary}, time=${eventTime.format()}, isMorning=${isEventMorning}, isBefore=${eventTime.isBefore(appointmentTime)}`);
+        
         // Count if it's a morning appointment AND comes before our appointment time
         if (isEventMorning && eventTime.isBefore(appointmentTime)) {
           orderNumber++;
+          console.log(`DEBUG: Incremented morning orderNumber to ${orderNumber}`);
         }
       }
       
       // Add 1 for the current appointment being booked
-      return orderNumber + 1;
+      const finalNumber = orderNumber + 1;
+      console.log(`DEBUG MORNING FINAL: ${finalNumber}`);
+      return finalNumber;
     }
   }
 
