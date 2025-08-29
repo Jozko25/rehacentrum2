@@ -368,24 +368,9 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
 
     const events = await this.getEventsForDay(date);
     
-    // Filter events that have order numbers (exclude sports exams and other non-numbered types)
-    const orderedEvents = events.filter(event => {
-      if (!event.start || !event.start.dateTime) return false;
-      
-      // Check if this event type uses order numbers
-      const eventAppointmentType = Object.keys(config.appointmentTypes).find(type => {
-        const typeName = config.appointmentTypes[type].name;
-        return event.summary && event.summary.includes(typeName);
-      });
-      
-      return eventAppointmentType && config.appointmentTypes[eventAppointmentType].orderNumbers;
-    });
-
-    // Sort events by time to get proper chronological order
-    orderedEvents.sort((a, b) => {
-      const timeA = dayjs(a.start.dateTime);
-      const timeB = dayjs(b.start.dateTime);
-      return timeA.isBefore(timeB) ? -1 : 1;
+    // SIMPLIFIED: Just get ALL events with valid start times - no complex filtering
+    const allEvents = events.filter(event => {
+      return event.start && event.start.dateTime;
     });
 
     // Determine if this is morning (9:00-11:30) or afternoon (13:00-14:20) slot
@@ -400,8 +385,8 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
       // For afternoon slots, count all existing afternoon appointments
       let afternoonCount = 0;
       
-      // Count all existing afternoon appointments using same logic pattern as morning
-      for (const event of orderedEvents) {
+      // Count ALL afternoon events - no complex filtering
+      for (const event of allEvents) {
         const eventTime = dayjs(event.start.dateTime);
         const eventHour = eventTime.hour();
         const eventMinute = eventTime.minute();
@@ -421,8 +406,8 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
       // For morning slots, count all existing morning appointments + 1 for this new one
       let morningCount = 0;
       
-      // Count all existing morning appointments
-      for (const event of orderedEvents) {
+      // Count ALL morning events - no complex filtering  
+      for (const event of allEvents) {
         const eventTime = dayjs(event.start.dateTime);
         const eventHour = eventTime.hour();
         
