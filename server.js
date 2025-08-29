@@ -1214,19 +1214,32 @@ app.post('/slots/soonest', async (req, res) => {
 // Create appointment
 app.post('/api/appointments', async (req, res) => {
   try {
-    const { patientData, appointmentType, dateTime } = req.body;
+    const { patientData, appointmentType, dateTime, appointmentDate, appointmentTime } = req.body;
+    
+    // Handle both dateTime format and separate appointmentDate/appointmentTime format
+    let finalDateTime;
+    if (dateTime) {
+      finalDateTime = dateTime;
+    } else if (appointmentDate && appointmentTime) {
+      // Combine date and time into ISO format
+      finalDateTime = `${appointmentDate}T${appointmentTime}:00`;
+    } else {
+      return res.status(400).json({
+        errors: ['Either dateTime or both appointmentDate and appointmentTime must be provided']
+      });
+    }
     
     // Validate complete appointment
     const validation = await appointmentValidator.validateCompleteAppointment({
       patientData,
       appointmentType,
-      dateTime
+      dateTime: finalDateTime
     });
     
     if (!validation.isValid) {
       const alternatives = await appointmentValidator.findAlternativeSlots(
         appointmentType,
-        dayjs(dateTime).format('YYYY-MM-DD')
+        dayjs(finalDateTime).format('YYYY-MM-DD')
       );
       
       return res.status(400).json({
@@ -1236,8 +1249,8 @@ app.post('/api/appointments', async (req, res) => {
     }
     
     // Get order number
-    const date = dayjs(dateTime).format('YYYY-MM-DD');
-    const orderNumber = await googleCalendar.getOrderNumber(appointmentType, date, dateTime);
+    const date = dayjs(finalDateTime).format('YYYY-MM-DD');
+    const orderNumber = await googleCalendar.getOrderNumber(appointmentType, date, finalDateTime);
     
     // Create calendar event
     const typeConfig = config.appointmentTypes[appointmentType];
