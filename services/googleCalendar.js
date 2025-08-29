@@ -400,22 +400,32 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
       // For afternoon slots, count all existing afternoon appointments + 1 for this new one
       let afternoonCount = 0;
       
+      console.log(`DEBUG AFTERNOON: Processing ${orderedEvents.length} events`);
+      
       // Count all existing afternoon appointments  
       for (const event of orderedEvents) {
         const eventTime = dayjs(event.start.dateTime);
         const eventHour = eventTime.hour();
         const eventMinute = eventTime.minute();
         
+        console.log(`DEBUG: Event ${event.summary} at ${eventTime.format('HH:mm')} (hour=${eventHour}, minute=${eventMinute})`);
+        
         // Check if event is in afternoon slot (13:00-14:20)
         const isEventAfternoon = (eventHour === 13) || (eventHour === 14 && eventMinute <= 20);
         
+        console.log(`DEBUG: Is afternoon slot? ${isEventAfternoon}`);
+        
         if (isEventAfternoon) {
           afternoonCount++;
+          console.log(`DEBUG: Incremented afternoonCount to ${afternoonCount}`);
         }
       }
       
+      const result = 19 + afternoonCount;
+      console.log(`DEBUG AFTERNOON FINAL: 19 + ${afternoonCount} = ${result}`);
+      
       // Afternoon queue numbers start at 19, so return 19 + count of existing afternoon appointments
-      return 19 + afternoonCount;
+      return result;
     } else {
       // For morning slots, count all existing morning appointments + 1 for this new one
       let morningCount = 0;
