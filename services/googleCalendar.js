@@ -421,8 +421,7 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
       // But if some found, add them to 19
       const result = 19 + afternoonCount;
       
-      // TEMP TEST: Add 100 to verify this code path is being executed
-      return result + 100;
+      return result;
     } else {
       // For morning slots, count all existing morning appointments + 1 for this new one
       let morningCount = 0;
