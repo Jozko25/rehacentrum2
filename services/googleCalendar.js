@@ -415,8 +415,14 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
       }
       
       // Afternoon queue numbers: 19 for first, 20 for second, etc.
-      // So return 19 + count of existing afternoon appointments  
-      return 19 + afternoonCount;
+      // So return 19 + count of existing afternoon appointments
+      
+      // TEMP DIAGNOSTIC: If no existing afternoon appointments found, still return 19
+      // But if some found, add them to 19
+      const result = 19 + afternoonCount;
+      
+      // TEMP TEST: Add 100 to verify this code path is being executed
+      return result + 100;
     } else {
       // For morning slots, count all existing morning appointments + 1 for this new one
       let morningCount = 0;
