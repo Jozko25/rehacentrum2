@@ -397,10 +397,10 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
     const isAfternoonSlot = (appointmentHour === 13) || (appointmentHour === 14 && appointmentMinute <= 20);
     
     if (isAfternoonSlot) {
-      // For afternoon slots, count appointments from start of afternoon block
-      let orderNumber = 19; // Base number for afternoon
+      // For afternoon slots, start counting from 19
+      let orderNumber = 18; // Start at 18 so first appointment gets 19
       
-      // Count all afternoon appointments that come before this time slot
+      // Count all afternoon appointments that come before or at this time slot
       for (const event of orderedEvents) {
         const eventTime = dayjs(event.start.dateTime);
         const eventHour = eventTime.hour();
@@ -415,10 +415,11 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
         }
       }
       
-      return orderNumber;
+      // Add 1 for the current appointment being booked
+      return orderNumber + 1;
     } else {
-      // For morning slots, count from 1
-      let orderNumber = 1; // Base number for morning
+      // For morning slots, start counting from 1
+      let orderNumber = 0; // Start at 0 so first appointment gets 1
       
       // Count all morning appointments that come before this time slot
       for (const event of orderedEvents) {
@@ -434,7 +435,8 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
         }
       }
       
-      return orderNumber;
+      // Add 1 for the current appointment being booked
+      return orderNumber + 1;
     }
   }
 
