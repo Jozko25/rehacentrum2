@@ -130,7 +130,7 @@ const config = {
       end: '16:00'
     },
     vacationKeyword: 'DOVOLENKA',
-    minAdvanceBooking: 1, // hours
+    minAdvanceBooking: 0, // hours - DISABLED to allow immediate booking
     maxAdvanceBooking: 30, // days
     
     // Hourly patient limits for ordinary hours
