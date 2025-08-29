@@ -368,56 +368,31 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
 
     const events = await this.getEventsForDay(date);
     
-    // BULLETPROOF APPROACH: Sort all events by time and assign sequential numbers
-    const allEvents = events.filter(event => {
-      return event.start && event.start.dateTime;
-    });
+    // TIME-BASED QUEUE NUMBERS: No need to query existing events!
+    // Calculate queue number purely based on time slot
     
-    // Add the NEW appointment to the list for sorting
-    const newAppointmentTime = dayjs(appointmentDateTime);
-    const tempEvent = { start: { dateTime: appointmentDateTime } };
-    allEvents.push(tempEvent);
+    const appointmentTime = dayjs(appointmentDateTime);
+    const appointmentHour = appointmentTime.hour();
+    const appointmentMinute = appointmentTime.minute();
     
-    // Sort ALL events by time
-    allEvents.sort((a, b) => {
-      const timeA = dayjs(a.start.dateTime);
-      const timeB = dayjs(b.start.dateTime);
-      return timeA.isBefore(timeB) ? -1 : 1;
-    });
-    
-    // Find morning and afternoon events
-    let morningEvents = [];
-    let afternoonEvents = [];
-    
-    for (const event of allEvents) {
-      const eventTime = dayjs(event.start.dateTime);
-      const eventHour = eventTime.hour();
-      const eventMinute = eventTime.minute();
-      
-      // Morning slot: 9:00-11:30
-      if (eventHour >= 9 && eventHour < 12) {
-        morningEvents.push(event);
-      }
-      // Afternoon slot: 13:00-14:20  
-      else if ((eventHour === 13) || (eventHour === 14 && eventMinute <= 20)) {
-        afternoonEvents.push(event);
-      }
+    // AFTERNOON SLOTS: 13:00-14:20 (queue numbers 19, 20, 21...)
+    if (appointmentHour === 13 || (appointmentHour === 14 && appointmentMinute <= 20)) {
+      // Calculate position based on 10-minute intervals starting at 13:00
+      const totalMinutes = (appointmentHour - 13) * 60 + appointmentMinute;
+      const slotPosition = Math.floor(totalMinutes / 10);
+      return 19 + slotPosition;
     }
     
-    // Determine if new appointment is morning or afternoon
-    const appointmentHour = newAppointmentTime.hour();
-    const appointmentMinute = newAppointmentTime.minute();
-    const isAfternoonSlot = (appointmentHour === 13) || (appointmentHour === 14 && appointmentMinute <= 20);
-    
-    if (isAfternoonSlot) {
-      // Find position of new appointment in afternoon list and add 19
-      const position = afternoonEvents.findIndex(event => event.start.dateTime === appointmentDateTime);
-      return 19 + position;
-    } else {
-      // Find position of new appointment in morning list and add 1  
-      const position = morningEvents.findIndex(event => event.start.dateTime === appointmentDateTime);
-      return 1 + position;
+    // MORNING SLOTS: 9:00-11:30 (queue numbers 1, 2, 3...)  
+    else if (appointmentHour >= 9 && appointmentHour < 12) {
+      // Calculate position based on 10-minute intervals starting at 9:00
+      const totalMinutes = (appointmentHour - 9) * 60 + appointmentMinute;
+      const slotPosition = Math.floor(totalMinutes / 10);
+      return 1 + slotPosition;
     }
+    
+    // Fallback (shouldn't happen)
+    return 1;
   }
 
   async isVacationDay(date) {
