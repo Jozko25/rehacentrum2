@@ -397,35 +397,26 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
     const isAfternoonSlot = (appointmentHour === 13) || (appointmentHour === 14 && appointmentMinute <= 20);
     
     if (isAfternoonSlot) {
-      // For afternoon slots, count all existing afternoon appointments + 1 for this new one
+      // For afternoon slots, count all existing afternoon appointments
       let afternoonCount = 0;
       
-      console.log(`DEBUG AFTERNOON: Processing ${orderedEvents.length} events`);
-      
-      // Count all existing afternoon appointments  
+      // Count all existing afternoon appointments using same logic pattern as morning
       for (const event of orderedEvents) {
         const eventTime = dayjs(event.start.dateTime);
         const eventHour = eventTime.hour();
         const eventMinute = eventTime.minute();
         
-        console.log(`DEBUG: Event ${event.summary} at ${eventTime.format('HH:mm')} (hour=${eventHour}, minute=${eventMinute})`);
-        
-        // Check if event is in afternoon slot (13:00-14:20)
+        // Check if event is in afternoon slot (13:00-14:20) - same as isAfternoonSlot logic
         const isEventAfternoon = (eventHour === 13) || (eventHour === 14 && eventMinute <= 20);
-        
-        console.log(`DEBUG: Is afternoon slot? ${isEventAfternoon}`);
         
         if (isEventAfternoon) {
           afternoonCount++;
-          console.log(`DEBUG: Incremented afternoonCount to ${afternoonCount}`);
         }
       }
       
-      const result = 19 + afternoonCount;
-      console.log(`DEBUG AFTERNOON FINAL: 19 + ${afternoonCount} = ${result}`);
-      
-      // Afternoon queue numbers start at 19, so return 19 + count of existing afternoon appointments
-      return result;
+      // Afternoon queue numbers: 19 for first, 20 for second, etc.
+      // So return 19 + count of existing afternoon appointments  
+      return 19 + afternoonCount;
     } else {
       // For morning slots, count all existing morning appointments + 1 for this new one
       let morningCount = 0;
