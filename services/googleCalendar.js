@@ -383,8 +383,8 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
       return 19 + slotPosition;
     }
     
-    // MORNING SLOTS: 9:00-11:30 (queue numbers 1, 2, 3...)  
-    else if (appointmentHour >= 9 && appointmentHour < 12) {
+    // MORNING SLOTS: 9:00-11:30 (queue numbers 1, 2, 3...16)  
+    else if (appointmentHour >= 9 && (appointmentHour < 11 || (appointmentHour === 11 && appointmentMinute <= 30))) {
       // Calculate position based on 10-minute intervals starting at 9:00
       const totalMinutes = (appointmentHour - 9) * 60 + appointmentMinute;
       const slotPosition = Math.floor(totalMinutes / 10);

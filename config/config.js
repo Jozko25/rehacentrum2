@@ -89,7 +89,7 @@ const config = {
         { start: '09:00', end: '11:30', interval: 10 },
         { start: '13:00', end: '14:20', interval: 10 }
       ],
-      dailyLimit: 10,
+      dailyLimit: 1, // FIXED: Only 1 zdravotnicke_pomocky appointment per day
       duration: 30,
       price: 0,
       currency: 'EUR',
