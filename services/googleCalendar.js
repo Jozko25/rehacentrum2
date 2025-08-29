@@ -434,7 +434,7 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
       }
       
       // Morning queue numbers start at 1, so return 1 + count of existing morning appointments
-      return 1 + morningCount;
+      return 888 + morningCount; // TEMP TEST: If this shows 888, deployment is working
     }
   }
 
