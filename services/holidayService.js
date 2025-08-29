@@ -10,6 +10,10 @@ class HolidayService {
   }
 
   async isHoliday(date) {
+    // TEMPORARILY DISABLED - always return false to allow booking
+    return false;
+    
+    /* ORIGINAL CODE:
     const dateString = dayjs(date).format('YYYY-MM-DD');
     const year = dayjs(date).year();
     
@@ -30,6 +34,7 @@ class HolidayService {
     this.cacheExpiry.set(cacheKey, now + (24 * 60 * 60 * 1000));
     
     return yearHolidays.has(dateString);
+    */
   }
 
   getHolidaysForYear(year) {
