@@ -368,62 +368,55 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
 
     const events = await this.getEventsForDay(date);
     
-    // SIMPLIFIED: Just get ALL events with valid start times - no complex filtering
+    // BULLETPROOF APPROACH: Sort all events by time and assign sequential numbers
     const allEvents = events.filter(event => {
       return event.start && event.start.dateTime;
     });
-
-    // Determine if this is morning (9:00-11:30) or afternoon (13:00-14:20) slot
-    const appointmentTime = dayjs(appointmentDateTime);
-    const appointmentHour = appointmentTime.hour();
-    const appointmentMinute = appointmentTime.minute();
     
-    // Check if appointment is in afternoon slot (13:00-14:20)
+    // Add the NEW appointment to the list for sorting
+    const newAppointmentTime = dayjs(appointmentDateTime);
+    const tempEvent = { start: { dateTime: appointmentDateTime } };
+    allEvents.push(tempEvent);
+    
+    // Sort ALL events by time
+    allEvents.sort((a, b) => {
+      const timeA = dayjs(a.start.dateTime);
+      const timeB = dayjs(b.start.dateTime);
+      return timeA.isBefore(timeB) ? -1 : 1;
+    });
+    
+    // Find morning and afternoon events
+    let morningEvents = [];
+    let afternoonEvents = [];
+    
+    for (const event of allEvents) {
+      const eventTime = dayjs(event.start.dateTime);
+      const eventHour = eventTime.hour();
+      const eventMinute = eventTime.minute();
+      
+      // Morning slot: 9:00-11:30
+      if (eventHour >= 9 && eventHour < 12) {
+        morningEvents.push(event);
+      }
+      // Afternoon slot: 13:00-14:20  
+      else if ((eventHour === 13) || (eventHour === 14 && eventMinute <= 20)) {
+        afternoonEvents.push(event);
+      }
+    }
+    
+    // Determine if new appointment is morning or afternoon
+    const appointmentHour = newAppointmentTime.hour();
+    const appointmentMinute = newAppointmentTime.minute();
     const isAfternoonSlot = (appointmentHour === 13) || (appointmentHour === 14 && appointmentMinute <= 20);
     
     if (isAfternoonSlot) {
-      // For afternoon slots, count all existing afternoon appointments
-      let afternoonCount = 0;
-      
-      // Count ALL afternoon events - no complex filtering
-      for (const event of allEvents) {
-        const eventTime = dayjs(event.start.dateTime);
-        const eventHour = eventTime.hour();
-        const eventMinute = eventTime.minute();
-        
-        // Check if event is in afternoon slot (13:00-14:20) - same as isAfternoonSlot logic
-        const isEventAfternoon = (eventHour === 13) || (eventHour === 14 && eventMinute <= 20);
-        
-        if (isEventAfternoon) {
-          afternoonCount++;
-        }
-      }
-      
-      // Afternoon queue numbers: 1st appointment = 19, 2nd = 20, 3rd = 21, etc.
-      // Add 19 to the count of existing appointments + 1 for new one
-      return 19 + afternoonCount;
+      // Find position of new appointment in afternoon list and add 19
+      const position = afternoonEvents.findIndex(event => event.start.dateTime === appointmentDateTime);
+      return 19 + position;
     } else {
-      // For morning slots, count all existing morning appointments + 1 for this new one
-      let morningCount = 0;
-      
-      // Count ALL morning events - no complex filtering  
-      for (const event of allEvents) {
-        const eventTime = dayjs(event.start.dateTime);
-        const eventHour = eventTime.hour();
-        
-        // Check if event is in morning slot (9:00-11:30)
-        const isEventMorning = eventHour >= 9 && eventHour < 12;
-        
-        if (isEventMorning) {
-          morningCount++;
-        }
-      }
-      
-      // Morning queue numbers: 1st appointment = 1, 2nd = 2, 3rd = 3, etc.
-      // Add 1 because we're booking a NEW appointment
-      
-      // Morning logic: count all existing + 1 for new appointment
-      return morningCount + 1;
+      // Find position of new appointment in morning list and add 1  
+      const position = morningEvents.findIndex(event => event.start.dateTime === appointmentDateTime);
+      return 1 + position;
     }
   }
 
