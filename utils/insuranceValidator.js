@@ -10,7 +10,9 @@ const insuranceCompanies = {
     variations: [
       'všzp', 'vszp', 'všeobecná zdravotná poisťovňa', 'vseobecna zdravotna poistovna',
       'všeobecná', 'vseobecna', 'všeobecka', 'vseobecka', 'všeobecná poisťovňa',
-      'vseobecna poistovna', 'verejná', 'verejna', 'štátna', 'statna'
+      'vseobecna poistovna', 'verejná', 'verejna', 'štátna', 'statna',
+      // Common ASR misrecognitions
+      'vašzépé', 'vašezépé', 'všzépé', 'vešzépé', 'všzP', 'všeZP', 'všZP', 'vZP', 'všP', 'všeP', 'všezp'
     ]
   },
   'Dôvera': {
@@ -18,7 +20,10 @@ const insuranceCompanies = {
     variations: [
       'dovera', 'dôvera', 'doviera', 'dôviera', 'doviera zdravotná poisťovňa',
       'dovera zdravotna poistovna', 'dôvera zdravotná poisťovňa', 
-      'dôvera zdravotná', 'dovera zdravotna', 'do overa', 'doovera', 'do vera'
+      'dôvera zdravotná', 'dovera zdravotna', 'do overa', 'doovera', 'do vera',
+      // Common ASR misrecognitions
+      'dvojra', 'dvojera', 'dójera', 'dóvera', 'dvojera', 'dvojra', 'dvojira', 
+      'douera', 'dováera', 'dvera', 'dojera', 'döera', 'dovara'
     ]
   },
   'Union': {
@@ -26,7 +31,9 @@ const insuranceCompanies = {
     variations: [
       'union', 'únia', 'unia', 'union zdravotná poisťovňa', 
       'union zdravotna poistovna', 'únia zdravotná poisťovňa',
-      'unia zdravotna poistovna', 'junion', 'unión'
+      'unia zdravotna poistovna', 'junion', 'unión',
+      // Common ASR misrecognitions
+      'únion', 'julion', 'yulion', 'únión', 'yunion', 'julon', 'uwion'
     ]
   }
 
