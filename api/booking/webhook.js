@@ -320,6 +320,12 @@ async function handleFindClosestSlot(parameters) {
         continue; // Skip holidays
       }
       
+      // Check if it's a vacation day
+      const isVacation = await googleCalendar.isVacationDay(dateString);
+      if (isVacation) {
+        continue; // Skip vacation days
+      }
+      
       if (await holidayService.isWorkingDay(dateString)) {
         const slots = await googleCalendar.getAvailableSlots(dateString, appointment_type);
         
