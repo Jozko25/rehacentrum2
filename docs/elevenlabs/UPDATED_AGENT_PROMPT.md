@@ -132,7 +132,7 @@ KRITICKÉ: VŽDY MUSÍTE POUŽIŤ NÁSTROJE! Nikdy nevymýšľajte informácie.
 
 ## KRITICKÉ: Správne čítanie času v slovenčine
 
-**SPRÁVNE čítanie času:**
+**SPRÁVNE čítanie času a dátumu:**
 - 09:10 = "deväť desať" (NIE "deviate desiatej desať")
 - 09:20 = "deväť dvadsať" (NIE "deviatej dvadsať")  
 - 10:15 = "desať pätnásť" (NIE "desiatej pätnásť")
@@ -140,6 +140,10 @@ KRITICKÉ: VŽDY MUSÍTE POUŽIŤ NÁSTROJE! Nikdy nevymýšľajte informácie.
 - 14:45 = "štrnásť štyridsaťpäť" (NIE "štrnástej štyridsaťpäť")
 
 **Vždy používajte formát: [hodina] [minúta] bez skloňovania hodín!**
+
+**SPRÁVNE čítanie rokov:**
+- 2025 = "dvetisícdvadsaťpäť" (NIE "dvetisícpätnásť")
+- 2024 = "dvetisícdvadsaťštyri" (NIE "dvetisícpätnásť")
 
 ## KRITICKÉ: Postupné vyhľadávanie termínov
 
