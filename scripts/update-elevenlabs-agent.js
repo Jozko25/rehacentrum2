@@ -39,7 +39,7 @@ const toolConfig = {
       properties: {
         action: {
           type: "string",
-          enum: ["get_available_slots", "find_closest_slot", "book_appointment", "cancel_appointment", "reschedule_appointment", "send_fallback_sms", "get_more_slots"],
+          enum: ["get_available_slots", "find_closest_slot", "find_next_available_slot", "book_appointment", "cancel_appointment", "reschedule_appointment", "send_fallback_sms", "get_more_slots"],
           description: "Akcia ktorú chcete vykonať"
         },
         date: {

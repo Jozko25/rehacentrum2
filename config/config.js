@@ -129,7 +129,7 @@ const config = {
       start: '07:00',
       end: '16:00'
     },
-    vacationKeyword: 'DOVOLENKA',
+    vacationKeyword: 'dovolenka',
     minAdvanceBooking: 0, // hours - DISABLED to allow immediate booking
     maxAdvanceBooking: 30, // days
     

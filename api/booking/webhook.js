@@ -371,6 +371,117 @@ async function handleFindClosestSlot(parameters) {
   }
 }
 
+async function handleFindNextAvailableSlot(parameters) {
+  const { appointment_type, preferred_date, preferred_time, days_to_search = 14, skip_first = true } = parameters;
+  
+  if (!appointment_type) {
+    return {
+      success: false,
+      message: "Potrebujem typ vyšetrenia na vyhľadanie termínu."
+    };
+  }
+
+  try {
+    const typeValidation = appointmentValidator.validateAppointmentType(appointment_type);
+    if (!typeValidation.isValid) {
+      return {
+        success: false,
+        message: "Došlo k chybe"
+      };
+    }
+
+    const startDate = preferred_date ? dayjs(preferred_date) : dayjs().tz(config.calendar.timeZone);
+    let foundSlots = [];
+    
+    for (let i = 0; i < days_to_search; i++) {
+      const checkDate = startDate.add(i, 'day');
+      const dateString = checkDate.format('YYYY-MM-DD');
+      
+      // Check if it's a holiday first
+      const isHoliday = await holidayService.isHoliday(dateString);
+      if (isHoliday) {
+        continue; // Skip holidays
+      }
+      
+      // Check if it's a vacation day
+      const isVacation = await googleCalendar.isVacationDay(dateString);
+      if (isVacation) {
+        continue; // Skip vacation days
+      }
+      
+      if (await holidayService.isWorkingDay(dateString)) {
+        const slots = await googleCalendar.getAvailableSlots(dateString, appointment_type);
+        
+        // Filter by preferred time if specified
+        let filteredSlots = slots;
+        if (preferred_time) {
+          filteredSlots = slots.filter(slot => 
+            timeParser.matchesNaturalTime(slot.time, preferred_time)
+          );
+        }
+        
+        // Add all slots from this day to our collection
+        for (const slot of filteredSlots) {
+          const typeConfig = config.appointmentTypes[appointment_type];
+          foundSlots.push({
+            date: dateString,
+            day_name: checkDate.format('dddd'),
+            time: slot.time,
+            datetime: slot.datetime,
+            days_from_preferred: i,
+            appointment_type: typeConfig.name,
+            price: `${typeConfig.price}€`,
+            insurance_covered: typeConfig.insurance
+          });
+        }
+        
+        // If we have at least 2 slots, we can return the second one
+        if (foundSlots.length >= 2) {
+          break;
+        }
+      }
+    }
+    
+    if (foundSlots.length === 0) {
+      return {
+        success: true,
+        message: `Žiaľ, v najbližších ${days_to_search} dňoch nie sú dostupné žiadne voľné termíny pre ${config.appointmentTypes[appointment_type].name}.`
+      };
+    } else if (foundSlots.length === 1) {
+      // Only one slot found, return it (better than nothing)
+      const foundSlot = foundSlots[0];
+      const formattedDate = dayjs(foundSlot.date).format('DD.MM.YYYY');
+      const dayPrefix = foundSlot.days_from_preferred === 0 ? 'dnes' : 
+                       foundSlot.days_from_preferred === 1 ? 'zajtra' : 
+                       `za ${foundSlot.days_from_preferred} dní`;
+      
+      return {
+        success: true,
+        message: `Najbližší voľný termín pre ${foundSlot.appointment_type} je ${dayPrefix} (${foundSlot.day_name} ${formattedDate}) o ${foundSlot.time}.`
+      };
+    } else {
+      // Return the second available slot (skip the first one)
+      const foundSlot = foundSlots[1];
+      const formattedDate = dayjs(foundSlot.date).format('DD.MM.YYYY');
+      const dayPrefix = foundSlot.days_from_preferred === 0 ? 'dnes' : 
+                       foundSlot.days_from_preferred === 1 ? 'zajtra' : 
+                       `za ${foundSlot.days_from_preferred} dní`;
+      
+      return {
+        success: true,
+        message: `Ďalší dostupný termín pre ${foundSlot.appointment_type} je ${dayPrefix} (${foundSlot.day_name} ${formattedDate}) o ${foundSlot.time}.`
+      };
+    }
+  } catch (error) {
+    console.error('Error in handleFindNextAvailableSlot:', error);
+    addLog('error', `handleFindNextAvailableSlot failed: ${error.message}`);
+    return {
+      success: false,
+      message: "Došlo k chybe pri vyhľadávaní termínov"
+    };
+  }
+}
+
 async function handleBookAppointment(parameters) {
   const { 
     appointment_type, 
@@ -862,6 +973,10 @@ module.exports = async (req, res) => {
         
       case 'find_closest_slot':
         result = await handleFindClosestSlot(parameters || {});
+        break;
+        
+      case 'find_next_available_slot':
+        result = await handleFindNextAvailableSlot(parameters || {});
         break;
         
       case 'book_appointment':
