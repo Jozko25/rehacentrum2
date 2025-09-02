@@ -397,6 +397,7 @@ async function handleFindNextAvailableSlot(parameters) {
       };
     }
 
+    const normalizedType = typeValidation.normalizedType;
     const startDate = preferred_date ? dayjs(preferred_date) : dayjs().tz(config.calendar.timeZone);
     let foundSlots = [];
     
