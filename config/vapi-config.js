@@ -61,7 +61,7 @@ const config = {
   healthCheck: {
     enabled: process.env.AUTO_FAILOVER_ENABLED === 'true',
     elevenlabsHealthCheckInterval: parseInt(process.env.ELEVENLABS_HEALTH_CHECK_INTERVAL) || 30000,
-    elevenlabsHealthEndpoint: 'https://api.elevenlabs.io/v1/user',
+    elevenlabsHealthEndpoint: 'https://api.elevenlabs.io/v1/models',
     maxRetries: 3,
     retryInterval: 5000
   },

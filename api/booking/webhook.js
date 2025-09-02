@@ -99,9 +99,11 @@ async function handleGetMoreSlots(parameters) {
       message: message
     };
   } catch (error) {
+    console.error('Error in handleGetMoreSlots:', error);
+    addLog('error', `handleGetMoreSlots failed: ${error.message}`);
     return {
       success: false,
-      message: "Došlo k chybe"
+      message: "Došlo k chybe pri vyhľadávaní termínov"
     };
   }
 }
@@ -138,22 +140,8 @@ async function logWebhookCall(action, requestData, responseData) {
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-// Initialize services
-let servicesInitialized = false;
-
-async function initializeServices() {
-  if (servicesInitialized) return;
-  
-  try {
-    await googleCalendar.initialize();
-    await smsService.initialize();
-    servicesInitialized = true;
-    console.log('ElevenLabs webhook services initialized');
-  } catch (error) {
-    console.error('Failed to initialize webhook services:', error);
-    throw error;
-  }
-}
+// Initialize services - REMOVED: Services should already be initialized by server.js
+// No need to initialize services in webhook - they're initialized at server startup
 
 async function handleGetAvailableSlots(parameters) {
   const { date, appointment_type, time, preferred_time, offset = 0, show_more = false } = parameters;
@@ -281,9 +269,11 @@ async function handleGetAvailableSlots(parameters) {
       message: message
     };
   } catch (error) {
+    console.error('Error in handleGetAvailableSlots:', error);
+    addLog('error', `handleGetAvailableSlots failed: ${error.message}`);
     return {
       success: false,
-      message: "Došlo k chybe"
+      message: "Došlo k chybe pri vyhľadávaní termínov"
     };
   }
 }
@@ -372,9 +362,11 @@ async function handleFindClosestSlot(parameters) {
       };
     }
   } catch (error) {
+    console.error('Error in handleFindClosestSlot:', error);
+    addLog('error', `handleFindClosestSlot failed: ${error.message}`);
     return {
       success: false,
-      message: "Došlo k chybe"
+      message: "Došlo k chybe pri vyhľadávaní najbližšieho termínu"
     };
   }
 }
@@ -529,9 +521,11 @@ async function handleBookAppointment(parameters) {
       message: successMessage
     };
   } catch (error) {
+    console.error('Error in handleBookAppointment:', error);
+    addLog('error', `handleBookAppointment failed: ${error.message}`);
     return {
       success: false,
-      message: "Došlo k chybe"
+      message: "Došlo k chybe pri rezervácii termínu"
     };
   }
 }
@@ -795,8 +789,12 @@ async function handleSendFallbackSms(parameters) {
 
 // Main webhook handler
 module.exports = async (req, res) => {
-  // Initialize services on first request
-  await initializeServices();
+  // Quick check if services are initialized (should be done by server.js at startup)
+  if (!googleCalendar.initialized) {
+    const errorMessage = 'Služby sa načítavaju, skúste za chvíľu';
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    return res.status(503).send(errorMessage);
+  }
   
   // Log the incoming webhook request
   const requestData = {
@@ -810,7 +808,7 @@ module.exports = async (req, res) => {
   };
   
   if (req.method !== 'POST') {
-    const errorMessage = 'Došla k chybe';
+    const errorMessage = 'Došlo k chybe';
     const errorResponse = { 
       error: 'Method not allowed',
       message: errorMessage
@@ -835,7 +833,7 @@ module.exports = async (req, res) => {
       parameters = { ...req.body };
       delete parameters.action;
     } else {
-      const errorMessage = 'Došla k chybe';
+      const errorMessage = 'Došlo k chybe';
       const errorResponse = {
         error: 'Missing action parameter',
         supported_actions: [
@@ -893,7 +891,7 @@ module.exports = async (req, res) => {
       default:
         result = {
           success: false,
-          message: 'Došla k chybe'
+          message: "Došlo k chybe"
         };
     }
     

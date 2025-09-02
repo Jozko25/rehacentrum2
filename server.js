@@ -1510,7 +1510,7 @@ app.delete('/api/platform/statistics', adminSecurity, (req, res) => {
 app.use('/api/booking/webhook', require('./api/booking/webhook'));
 
 // VAPI.ai webhook endpoint (new dual-platform support)
-app.use('/api/booking/vapi-webhook', require('./api/booking/vapi-webhook'));
+// app.use('/api/booking/vapi-webhook', require('./api/booking/vapi-webhook')); // REMOVED: VAPI integration disabled
 
 // Error handling middleware
 app.use((error, req, res, next) => {

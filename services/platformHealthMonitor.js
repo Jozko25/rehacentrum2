@@ -68,11 +68,14 @@ class PlatformHealthMonitor {
 
   // Check health of all platforms
   async checkAllPlatforms() {
-    await Promise.all([
-      this.checkElevenLabsHealth(),
-      this.checkVapiHealth()
-    ]);
-
+    const checks = [this.checkElevenLabsHealth()];
+    
+    // Only check VAPI if it's enabled
+    if (vapiConfig.api.enabled) {
+      checks.push(this.checkVapiHealth());
+    }
+    
+    await Promise.all(checks);
     this.evaluateFailover();
   }
 

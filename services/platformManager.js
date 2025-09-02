@@ -32,7 +32,8 @@ class PlatformManager {
 
       // Start health monitoring if enabled
       if (vapiConfig.healthCheck.enabled) {
-        platformHealthMonitor.startMonitoring();
+        addLog('warning', 'Platform health monitoring disabled (VAPI integration removed)');
+        // platformHealthMonitor.startMonitoring(); // Disabled
       }
 
       this.initialized = true;
@@ -43,25 +44,15 @@ class PlatformManager {
     }
   }
 
-  // Get the appropriate webhook URL for new calls
+  // Get the appropriate webhook URL for new calls (VAPI integration removed)
   getWebhookEndpoint() {
-    const activePlatform = platformHealthMonitor.getActivePlatform();
-    
-    if (activePlatform === 'vapi') {
-      this.callRouting.vapiCalls++;
-      return {
-        platform: 'vapi',
-        endpoint: '/api/booking/vapi-webhook',
-        fullUrl: `${process.env.BASE_URL || 'https://rehacentrum2-production.up.railway.app'}/api/booking/vapi-webhook`
-      };
-    } else {
-      this.callRouting.elevenlabsCalls++;
-      return {
-        platform: 'elevenlabs',
-        endpoint: '/api/booking/webhook',
-        fullUrl: `${process.env.BASE_URL || 'https://rehacentrum2-production.up.railway.app'}/api/booking/webhook`
-      };
-    }
+    // Always return ElevenLabs endpoint since VAPI integration was removed
+    this.callRouting.elevenlabsCalls++;
+    return {
+      platform: 'elevenlabs',
+      endpoint: '/api/booking/webhook',
+      fullUrl: `${process.env.BASE_URL || 'https://rehacentrum2-production.up.railway.app'}/api/booking/webhook`
+    };
   }
 
   // Get platform configuration for external systems (like Zadarma)
