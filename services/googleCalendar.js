@@ -398,7 +398,7 @@ Vytvorené: ${dayjs().tz(config.calendar.timeZone).format('DD.MM.YYYY HH:mm:ss')
   async isVacationDay(date) {
     const events = await this.getEventsForDay(date);
     return events.some(event => 
-      event.summary && event.summary.includes(config.businessRules.vacationKeyword)
+      event.summary && event.summary.toUpperCase().includes(config.businessRules.vacationKeyword.toUpperCase())
     );
   }
 
