@@ -379,7 +379,7 @@ async function handleFindClosestSlot(parameters) {
 }
 
 async function handleFindNextAvailableSlot(parameters) {
-  const { appointment_type, preferred_date, preferred_time, days_to_search = 14, skip_first = true } = parameters;
+  const { appointment_type, preferred_date, preferred_time, days_to_search = 14, skip_count = 1 } = parameters;
   
   if (!appointment_type) {
     return {
@@ -443,8 +443,8 @@ async function handleFindNextAvailableSlot(parameters) {
           });
         }
         
-        // If we have at least 2 slots, we can return the second one
-        if (foundSlots.length >= 2) {
+        // If we have enough slots to return the requested one
+        if (foundSlots.length > skip_count) {
           break;
         }
       }
@@ -455,9 +455,9 @@ async function handleFindNextAvailableSlot(parameters) {
         success: true,
         message: `Žiaľ, v najbližších ${days_to_search} dňoch nie sú dostupné žiadne voľné termíny pre ${config.appointmentTypes[normalizedType].name}.`
       };
-    } else if (foundSlots.length === 1) {
-      // Only one slot found, return it (better than nothing)
-      const foundSlot = foundSlots[0];
+    } else if (foundSlots.length <= skip_count) {
+      // Not enough slots found for the requested skip_count
+      const foundSlot = foundSlots[foundSlots.length - 1]; // Return the last available slot
       const formattedDate = dayjs(foundSlot.date).format('DD.MM.YYYY');
       const dayPrefix = foundSlot.days_from_preferred === 0 ? 'dnes' : 
                        foundSlot.days_from_preferred === 1 ? 'zajtra' : 
@@ -468,8 +468,8 @@ async function handleFindNextAvailableSlot(parameters) {
         message: `Najbližší voľný termín pre ${foundSlot.appointment_type} je ${dayPrefix} (${foundSlot.day_name} ${formattedDate}) o ${foundSlot.time}.`
       };
     } else {
-      // Return the second available slot (skip the first one)
-      const foundSlot = foundSlots[1];
+      // Return the requested slot (skip_count determines which one)
+      const foundSlot = foundSlots[skip_count];
       const formattedDate = dayjs(foundSlot.date).format('DD.MM.YYYY');
       const dayPrefix = foundSlot.days_from_preferred === 0 ? 'dnes' : 
                        foundSlot.days_from_preferred === 1 ? 'zajtra' : 
