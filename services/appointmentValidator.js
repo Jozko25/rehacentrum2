@@ -16,6 +16,72 @@ dayjs.extend(isSameOrBefore);
 
 class AppointmentValidator {
   
+  // Map Slovak appointment names to internal codes
+  normalizeAppointmentType(appointmentType) {
+    if (!appointmentType) return null;
+    
+    const normalizedType = appointmentType.toLowerCase().trim();
+    
+    // Direct mapping for Slovak terms
+    const typeMapping = {
+      'vstupné vyšetrenie': 'vstupne_vysetrenie',
+      'vstupne vysetrenie': 'vstupne_vysetrenie', 
+      'vstupné vysetrenie': 'vstupne_vysetrenie',
+      'vstupne vyšetrenie': 'vstupne_vysetrenie',
+      'vstupne': 'vstupne_vysetrenie',
+      'vstupné': 'vstupne_vysetrenie',
+      'vstup': 'vstupne_vysetrenie',
+      
+      'kontrolné vyšetrenie': 'kontrolne_vysetrenie',
+      'kontrolne vysetrenie': 'kontrolne_vysetrenie',
+      'kontrolné vysetrenie': 'kontrolne_vysetrenie', 
+      'kontrolne vyšetrenie': 'kontrolne_vysetrenie',
+      'kontrolne': 'kontrolne_vysetrenie',
+      'kontrolné': 'kontrolne_vysetrenie',
+      'kontrola': 'kontrolne_vysetrenie',
+      
+      'športová prehliadka': 'sportova_prehliadka',
+      'sportova prehliadka': 'sportova_prehliadka',
+      'športová': 'sportova_prehliadka',
+      'sportova': 'sportova_prehliadka',
+      'šport': 'sportova_prehliadka',
+      'sport': 'sportova_prehliadka',
+      'športové': 'sportova_prehliadka',
+      'sportové': 'sportova_prehliadka',
+      
+      'zdravotnícke pomôcky': 'zdravotnicke_pomocky',
+      'zdravotnicke pomocky': 'zdravotnicke_pomocky',
+      'zdravotnícke pomocky': 'zdravotnicke_pomocky',
+      'zdravotnicke pomôcky': 'zdravotnicke_pomocky',
+      'pomôcky': 'zdravotnicke_pomocky',
+      'pomocky': 'zdravotnicke_pomocky',
+      
+      'konzultácia': 'konzultacia',
+      'konzultacia': 'konzultacia',
+      'konzultácie': 'konzultacia',
+      'konzultacie': 'konzultacia'
+    };
+    
+    // First try exact mapping
+    if (typeMapping[normalizedType]) {
+      return typeMapping[normalizedType];
+    }
+    
+    // If already in correct format, return as-is
+    if (config.appointmentTypes[appointmentType]) {
+      return appointmentType;
+    }
+    
+    // Try partial matches
+    for (const [key, value] of Object.entries(typeMapping)) {
+      if (normalizedType.includes(key) || key.includes(normalizedType)) {
+        return value;
+      }
+    }
+    
+    return appointmentType; // Return original if no match
+  }
+  
   validatePatientData(patientData) {
     const errors = [];
     const { requiredFields, phoneFormat } = config.validation;
@@ -52,7 +118,10 @@ class AppointmentValidator {
       return { isValid: false, error: 'Appointment type is required' };
     }
     
-    if (!config.appointmentTypes[appointmentType]) {
+    // Normalize the appointment type first
+    const normalizedType = this.normalizeAppointmentType(appointmentType);
+    
+    if (!config.appointmentTypes[normalizedType]) {
       return { 
         isValid: false, 
         error: `Invalid appointment type: ${appointmentType}`,
@@ -60,7 +129,7 @@ class AppointmentValidator {
       };
     }
     
-    return { isValid: true };
+    return { isValid: true, normalizedType };
   }
   
   async validateDateTime(dateTime, appointmentType) {
