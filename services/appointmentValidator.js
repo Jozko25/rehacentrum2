@@ -16,70 +16,65 @@ dayjs.extend(isSameOrBefore);
 
 class AppointmentValidator {
   
-  // Map Slovak appointment names to internal codes
+  // Normalize Slovak appointment names to internal codes
+  // STRICT MATCHING: Only exact official names (case + accent insensitive)
   normalizeAppointmentType(appointmentType) {
     if (!appointmentType) return null;
     
-    const normalizedType = appointmentType.toLowerCase().trim();
-    
-    // Direct mapping for Slovak terms
-    const typeMapping = {
-      'vstupné vyšetrenie': 'vstupne_vysetrenie',
-      'vstupne vysetrenie': 'vstupne_vysetrenie', 
-      'vstupné vysetrenie': 'vstupne_vysetrenie',
-      'vstupne vyšetrenie': 'vstupne_vysetrenie',
-      'vstupne': 'vstupne_vysetrenie',
-      'vstupné': 'vstupne_vysetrenie',
-      'vstup': 'vstupne_vysetrenie',
-      
-      'kontrolné vyšetrenie': 'kontrolne_vysetrenie',
-      'kontrolne vysetrenie': 'kontrolne_vysetrenie',
-      'kontrolné vysetrenie': 'kontrolne_vysetrenie', 
-      'kontrolne vyšetrenie': 'kontrolne_vysetrenie',
-      'kontrolne': 'kontrolne_vysetrenie',
-      'kontrolné': 'kontrolne_vysetrenie',
-      'kontrola': 'kontrolne_vysetrenie',
-      
-      'športová prehliadka': 'sportova_prehliadka',
-      'sportova prehliadka': 'sportova_prehliadka',
-      'športová': 'sportova_prehliadka',
-      'sportova': 'sportova_prehliadka',
-      'šport': 'sportova_prehliadka',
-      'sport': 'sportova_prehliadka',
-      'športové': 'sportova_prehliadka',
-      'sportové': 'sportova_prehliadka',
-      
-      'zdravotnícke pomôcky': 'zdravotnicke_pomocky',
-      'zdravotnicke pomocky': 'zdravotnicke_pomocky',
-      'zdravotnícke pomocky': 'zdravotnicke_pomocky',
-      'zdravotnicke pomôcky': 'zdravotnicke_pomocky',
-      'pomôcky': 'zdravotnicke_pomocky',
-      'pomocky': 'zdravotnicke_pomocky',
-      
-      'konzultácia': 'konzultacia',
-      'konzultacia': 'konzultacia',
-      'konzultácie': 'konzultacia',
-      'konzultacie': 'konzultacia'
+    // Normalize for comparison: lowercase + remove accents
+    const normalize = (str) => {
+      return str.toLowerCase()
+        .trim()
+        .replace(/[áä]/g, 'a')
+        .replace(/[éě]/g, 'e') 
+        .replace(/[íî]/g, 'i')
+        .replace(/[óô]/g, 'o')
+        .replace(/[úů]/g, 'u')
+        .replace(/[ýÿ]/g, 'y')
+        .replace(/ť/g, 't')
+        .replace(/ň/g, 'n')
+        .replace(/š/g, 's')
+        .replace(/č/g, 'c')
+        .replace(/ž/g, 'z')
+        .replace(/ď/g, 'd')
+        .replace(/ľ/g, 'l')
+        .replace(/ŕ/g, 'r');
     };
     
-    // First try exact mapping
-    if (typeMapping[normalizedType]) {
-      return typeMapping[normalizedType];
+    const normalizedInput = normalize(appointmentType);
+    
+    // EXACT MATCHES ONLY - Official Slovak appointment names
+    const exactMatches = {
+      // Vstupné vyšetrenie variations
+      'vstupne vysetrenie': 'vstupne_vysetrenie',
+      
+      // Kontrolné vyšetrenie variations  
+      'kontrolne vysetrenie': 'kontrolne_vysetrenie',
+      
+      // Športová prehliadka variations
+      'sportova prehliadka': 'sportova_prehliadka',
+      
+      // Zdravotnícke pomôcky variations
+      'zdravotnicke pomocky': 'zdravotnicke_pomocky',
+      
+      // Konzultácia variations
+      'konzultacia': 'konzultacia'
+    };
+    
+    // Check exact match
+    if (exactMatches[normalizedInput]) {
+      console.log(`🔄 Normalized "${appointmentType}" → "${exactMatches[normalizedInput]}"`);
+      return exactMatches[normalizedInput];
     }
     
-    // If already in correct format, return as-is
+    // If already in correct internal format, return as-is
     if (config.appointmentTypes[appointmentType]) {
       return appointmentType;
     }
     
-    // Try partial matches
-    for (const [key, value] of Object.entries(typeMapping)) {
-      if (normalizedType.includes(key) || key.includes(normalizedType)) {
-        return value;
-      }
-    }
-    
-    return appointmentType; // Return original if no match
+    // No match found - return original (will likely fail validation)
+    console.log(`❌ No normalization found for "${appointmentType}"`);
+    return appointmentType;
   }
   
   validatePatientData(patientData) {
