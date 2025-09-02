@@ -296,6 +296,9 @@ async function handleFindClosestSlot(parameters) {
         message: `Neplatný typ vyšetrenia. Dostupné typy sú: ${typeValidation.availableTypes.join(', ')}.`
       };
     }
+    
+    // Use normalized appointment type
+    const normalizedType = typeValidation.normalizedType;
 
     const startDate = preferred_date ? dayjs(preferred_date) : dayjs().tz(config.calendar.timeZone);
     let foundSlot = null;
@@ -317,7 +320,7 @@ async function handleFindClosestSlot(parameters) {
       }
       
       if (await holidayService.isWorkingDay(dateString)) {
-        const slots = await googleCalendar.getAvailableSlots(dateString, appointment_type);
+        const slots = await googleCalendar.getAvailableSlots(dateString, normalizedType);
         
         // Filter by preferred time if specified
         let filteredSlots = slots;
@@ -328,7 +331,7 @@ async function handleFindClosestSlot(parameters) {
         }
         
         if (filteredSlots.length > 0) {
-          const typeConfig = config.appointmentTypes[appointment_type];
+          const typeConfig = config.appointmentTypes[normalizedType];
           foundSlot = {
             date: dateString,
             day_name: checkDate.format('dddd'),
@@ -358,7 +361,7 @@ async function handleFindClosestSlot(parameters) {
     } else {
       return {
         success: true,
-        message: `Žiaľ, v najbližších ${days_to_search} dňoch nie sú dostupné žiadne voľné termíny pre ${config.appointmentTypes[appointment_type].name}.`
+        message: `Žiaľ, v najbližších ${days_to_search} dňoch nie sú dostupné žiadne voľné termíny pre ${config.appointmentTypes[normalizedType].name}.`
       };
     }
   } catch (error) {
@@ -410,7 +413,7 @@ async function handleFindNextAvailableSlot(parameters) {
       }
       
       if (await holidayService.isWorkingDay(dateString)) {
-        const slots = await googleCalendar.getAvailableSlots(dateString, appointment_type);
+        const slots = await googleCalendar.getAvailableSlots(dateString, normalizedType);
         
         // Filter by preferred time if specified
         let filteredSlots = slots;
@@ -422,7 +425,7 @@ async function handleFindNextAvailableSlot(parameters) {
         
         // Add all slots from this day to our collection
         for (const slot of filteredSlots) {
-          const typeConfig = config.appointmentTypes[appointment_type];
+          const typeConfig = config.appointmentTypes[normalizedType];
           foundSlots.push({
             date: dateString,
             day_name: checkDate.format('dddd'),
@@ -445,7 +448,7 @@ async function handleFindNextAvailableSlot(parameters) {
     if (foundSlots.length === 0) {
       return {
         success: true,
-        message: `Žiaľ, v najbližších ${days_to_search} dňoch nie sú dostupné žiadne voľné termíny pre ${config.appointmentTypes[appointment_type].name}.`
+        message: `Žiaľ, v najbližších ${days_to_search} dňoch nie sú dostupné žiadne voľné termíny pre ${config.appointmentTypes[normalizedType].name}.`
       };
     } else if (foundSlots.length === 1) {
       // Only one slot found, return it (better than nothing)
