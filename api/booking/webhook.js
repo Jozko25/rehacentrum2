@@ -39,6 +39,8 @@ async function handleGetMoreSlots(parameters) {
       };
     }
 
+    const normalizedType = typeValidation.normalizedType;
+
     // Check for holidays and vacation days first
     const isHoliday = await holidayService.isHoliday(date);
     const holidayInfo = isHoliday ? holidayService.getHolidayInfo(date) : null;
@@ -46,7 +48,7 @@ async function handleGetMoreSlots(parameters) {
     
     const formattedDate = dayjs(date).format('DD.MM.YYYY');
     const dayName = dayjs(date).format('dddd');
-    const typeConfig = config.appointmentTypes[appointment_type];
+    const typeConfig = config.appointmentTypes[normalizedType];
     
     // If it's a holiday, warn before offering slots
     if (isHoliday && holidayInfo) {
@@ -64,7 +66,7 @@ async function handleGetMoreSlots(parameters) {
       };
     }
 
-    const availableSlots = await googleCalendar.getAvailableSlots(date, appointment_type);
+    const availableSlots = await googleCalendar.getAvailableSlots(date, normalizedType);
 
     if (availableSlots.length === 0) {
       return {
@@ -162,6 +164,8 @@ async function handleGetAvailableSlots(parameters) {
       };
     }
 
+    const normalizedType = typeValidation.normalizedType;
+
     // Check for holidays and vacation days first
     const isHoliday = await holidayService.isHoliday(date);
     const holidayInfo = isHoliday ? holidayService.getHolidayInfo(date) : null;
@@ -169,7 +173,7 @@ async function handleGetAvailableSlots(parameters) {
     
     const formattedDate = dayjs(date).format('DD.MM.YYYY');
     const dayName = dayjs(date).format('dddd');
-    const typeConfig = config.appointmentTypes[appointment_type];
+    const typeConfig = config.appointmentTypes[normalizedType];
 
     // If it's a holiday, warn before offering slots
     if (isHoliday && holidayInfo) {
@@ -187,7 +191,7 @@ async function handleGetAvailableSlots(parameters) {
       };
     }
 
-    const availableSlots = await googleCalendar.getAvailableSlots(date, appointment_type);
+    const availableSlots = await googleCalendar.getAvailableSlots(date, normalizedType);
 
     // Handle natural language time descriptions (poobede, ráno, etc.)
     let filteredSlots = availableSlots;
@@ -503,6 +507,16 @@ async function handleBookAppointment(parameters) {
   }
 
   try {
+    // Validate and normalize appointment type
+    const typeValidation = appointmentValidator.validateAppointmentType(appointment_type);
+    if (!typeValidation.isValid) {
+      return {
+        success: false,
+        message: "Došlo k chybe"
+      };
+    }
+    
+    const normalizedType = typeValidation.normalizedType;
     // PHONE VALIDATION: Format and validate phone number
     const phoneValidator = require('../../utils/phoneValidator');
     const phoneValidation = phoneValidator.validatePhoneNumber(phone);
@@ -537,13 +551,13 @@ async function handleBookAppointment(parameters) {
     // Validate complete appointment
     const validation = await appointmentValidator.validateCompleteAppointment({
       patientData,
-      appointmentType: appointment_type,
+      appointmentType: normalizedType,
       dateTime: date_time
     });
     
     if (!validation.isValid) {
       const alternatives = await appointmentValidator.findAlternativeSlots(
-        appointment_type,
+        normalizedType,
         dayjs(date_time).format('YYYY-MM-DD'),
         5
       );
@@ -571,12 +585,12 @@ async function handleBookAppointment(parameters) {
     
     // Get order number
     const date = dayjs(date_time).format('YYYY-MM-DD');
-    const orderNumber = await googleCalendar.getOrderNumber(appointment_type, date, date_time);
+    const orderNumber = await googleCalendar.getOrderNumber(normalizedType, date, date_time);
     
     // Create calendar event
-    const typeConfig = config.appointmentTypes[appointment_type];
+    const typeConfig = config.appointmentTypes[normalizedType];
     const eventData = {
-      appointmentType: appointment_type,
+      appointmentType: normalizedType,
       patientName: `${patient_name} ${patient_surname}`,
       phone: phone,
       insurance: insurance,
